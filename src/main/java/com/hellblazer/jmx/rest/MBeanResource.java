@@ -43,7 +43,6 @@
 
 package com.hellblazer.jmx.rest;
 
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -83,7 +82,7 @@ import com.sun.jersey.api.NotFoundException;
  * @author jfdenise
  */
 @Path("jmx")
-public class JMXMBeanRestResource {
+public class MBeanResource {
 
     /**
      * Array Sub Resource.
@@ -103,7 +102,7 @@ public class JMXMBeanRestResource {
                 Object obj = Array.get(array, i);
                 String newUri = uri + "/" + i;
                 added = added
-                        + JMXMBeanRestResource.this.discoverAllURIs(obj,
+                        + MBeanResource.this.discoverAllURIs(obj,
                                                                     newUri,
                                                                     buffer);
             }
@@ -161,7 +160,7 @@ public class JMXMBeanRestResource {
             for (Object obj : collection) {
                 String newUri = uri + "/" + i;
                 added = added
-                        + JMXMBeanRestResource.this.discoverAllURIs(obj,
+                        + MBeanResource.this.discoverAllURIs(obj,
                                                                     newUri,
                                                                     buffer);
                 i++;
@@ -217,7 +216,7 @@ public class JMXMBeanRestResource {
             for (String key : cd.getCompositeType().keySet()) { // Casting for JDK5
                 String newUri = uri + "/" + key;
                 added = added
-                        + JMXMBeanRestResource.this.discoverAllURIs(cd.get(key),
+                        + MBeanResource.this.discoverAllURIs(cd.get(key),
                                                                     newUri,
                                                                     buffer);
             }
@@ -273,7 +272,7 @@ public class JMXMBeanRestResource {
             for (Object key : map.keySet()) {
                 String newUri = uri + "/" + key;
                 added = added
-                        + JMXMBeanRestResource.this.discoverAllURIs(map.get(key),
+                        + MBeanResource.this.discoverAllURIs(map.get(key),
                                                                     newUri,
                                                                     buffer);
             }
@@ -353,7 +352,7 @@ public class JMXMBeanRestResource {
             for (Object obj : cds) {
                 String newUri = uri + "/" + i;
                 added = added
-                        + JMXMBeanRestResource.this.discoverAllURIs(obj,
+                        + MBeanResource.this.discoverAllURIs(obj,
                                                                     newUri,
                                                                     buffer);
                 i++;
@@ -392,19 +391,10 @@ public class JMXMBeanRestResource {
         }
     }
 
-    private static String                  LIST_BEGIN_TAG      = "<ul>\n";
-    private static String                  LIST_END_TAG        = "</ul>\n";
-    private static String                  LIST_ITEM_BEGIN_TAG = "<li>\n";
-    private static String                  LIST_ITEM_END_TAG   = "</li>\n";
-
-    private static Map<Class<?>, Class<?>> resources           = new LinkedHashMap<Class<?>, Class<?>>();
-
-    static {
-        resources.put(CompositeData.class, CompositeResource.class);
-        resources.put(TabularData.class, TabularResource.class);
-        resources.put(Collection.class, CollectionResource.class);
-        resources.put(Map.class, MapResource.class); // TabularData should be before Map 
-    }
+    private static String LIST_BEGIN_TAG      = "<ul>\n";
+    private static String LIST_END_TAG        = "</ul>\n";
+    private static String LIST_ITEM_BEGIN_TAG = "<li>\n";
+    private static String LIST_ITEM_END_TAG   = "</li>\n";
 
     /**
      * API for Resource handler. Call this operation to end a list that is used
@@ -415,14 +405,6 @@ public class JMXMBeanRestResource {
     public static String endList(StringBuilder buffer) {
         buffer.append(LIST_END_TAG);
         return buffer.toString();
-    }
-
-    /**
-     * Register Resource Handler. A resource must have a constructor with a
-     * UriInfo, Object parameters.
-     */
-    public static void registerResourceHandler(Class<?> clazz, Class<?> handler) {
-        resources.put(clazz, handler);
     }
 
     /**
@@ -455,10 +437,6 @@ public class JMXMBeanRestResource {
         return buffer;
     }
 
-    private static MBeanServer getMBeanServer() {
-        return ManagementFactory.getPlatformMBeanServer();
-    }
-
     private static CompositeData getRow(int idx, Iterator<?> it) {
         try {
             for (int i = 0; i < idx; i++) {
@@ -470,13 +448,21 @@ public class JMXMBeanRestResource {
         return (CompositeData) it.next();
     }
 
-    private boolean isHtml;
+    private boolean                       isHtml;
 
+    private final MBeanServer             mbeanServer;
+
+    private final Map<Class<?>, Class<?>> resources = new LinkedHashMap<Class<?>, Class<?>>();
     @Context
-    private UriInfo uriInfo;
+    private UriInfo                       uriInfo;
 
     /** Creates a new instance of JMXMBeanResource */
-    public JMXMBeanRestResource() {
+    public MBeanResource(MBeanServer mbeanServer) {
+        this.mbeanServer = mbeanServer;
+        resources.put(CompositeData.class, CompositeResource.class);
+        resources.put(TabularData.class, TabularResource.class);
+        resources.put(Collection.class, CollectionResource.class);
+        resources.put(Map.class, MapResource.class); // TabularData should be before Map 
     }
 
     /**
@@ -508,8 +494,6 @@ public class JMXMBeanRestResource {
         }
     }
 
-    // PRIVATE METHODS
-
     /**
      * API for Resource handler. Call this operation when the handled GET
      * request has a ProvideMime of type Html. By default XML is the formating.
@@ -519,6 +503,8 @@ public class JMXMBeanRestResource {
     public void enablesHtml(boolean b) {
         isHtml = b;
     }
+
+    // PRIVATE METHODS
 
     /**
      * API for Resource handler. Call this operation to delegate to your sub
@@ -539,12 +525,12 @@ public class JMXMBeanRestResource {
                 // First try inners:
                 Constructor<?> ctr = null;
                 try {
-                    ctr = e.getValue().getConstructor(JMXMBeanRestResource.class,
+                    ctr = e.getValue().getConstructor(MBeanResource.class,
                                                       Object.class);
                     return ctr.newInstance(this, value);
                 } catch (NoSuchMethodException ex) {
                     // Then non inner
-                    ctr = e.getValue().getConstructor(JMXMBeanRestResource.class,
+                    ctr = e.getValue().getConstructor(MBeanResource.class,
                                                       UriInfo.class,
                                                       Object.class);
                     return ctr.newInstance(uriInfo, value);
@@ -653,18 +639,18 @@ public class JMXMBeanRestResource {
 
     public String mbeanLeafURIs(String pat) throws Exception {
         ObjectName pattern = pat == null ? null : new ObjectName(pat);
-        Set<?> s = getMBeanServer().queryNames(pattern, null);
+        Set<?> s = mbeanServer.queryNames(pattern, null);
         StringBuilder buffer = startList();
         int num = 0;
         for (Object obj : s) {
             ObjectName name = (ObjectName) obj;
-            MBeanInfo info = getMBeanServer().getMBeanInfo(name);
+            MBeanInfo info = mbeanServer.getMBeanInfo(name);
             MBeanAttributeInfo[] attrs = info.getAttributes();
             for (MBeanAttributeInfo attr : attrs) {
 
                 Object value = null;
                 try {
-                    value = getMBeanServer().getAttribute(name, attr.getName());
+                    value = mbeanServer.getAttribute(name, attr.getName());
                 } catch (Exception ex) {
                     value = ex;
                 }
@@ -680,6 +666,14 @@ public class JMXMBeanRestResource {
         } else {
             return lst;
         }
+    }
+
+    /**
+     * Register Resource Handler. A resource must have a constructor with a
+     * UriInfo, Object parameters.
+     */
+    public void registerResourceHandler(Class<?> clazz, Class<?> handler) {
+        resources.put(clazz, handler);
     }
 
     private String currentMediaType() {
@@ -699,7 +693,7 @@ public class JMXMBeanRestResource {
         ObjectName name = new ObjectName(objName);
         Object value = null;
         try {
-            value = getMBeanServer().getAttribute(name, attributeName);
+            value = mbeanServer.getAttribute(name, attributeName);
         } catch (AttributeNotFoundException ex) {
             throw new NotFoundException(ex.toString());
         } catch (InstanceNotFoundException ex) {
@@ -715,7 +709,7 @@ public class JMXMBeanRestResource {
         ObjectName name = new ObjectName(objName);
         MBeanInfo info;
         try {
-            info = getMBeanServer().getMBeanInfo(name);
+            info = mbeanServer.getMBeanInfo(name);
         } catch (InstanceNotFoundException ex) {
             throw new NotFoundException(ex.toString());
         }
@@ -731,7 +725,7 @@ public class JMXMBeanRestResource {
 
     private Object mbeanURIs(String pat) throws Exception {
         ObjectName pattern = pat == null ? null : new ObjectName(pat);
-        Set<?> s = getMBeanServer().queryNames(pattern, null);
+        Set<?> s = mbeanServer.queryNames(pattern, null);
         StringBuilder buffer = startList();
         for (Object obj : s) {
             ObjectName n = (ObjectName) obj;

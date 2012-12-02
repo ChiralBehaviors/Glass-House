@@ -16,28 +16,14 @@
 
 package com.hellblazer.jmx;
 
-import static com.hellblazer.slp.ServiceScope.SERVICE_TYPE;
-
-import java.net.SocketException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
-import javax.management.ObjectName;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
 import com.hellblazer.gossip.configuration.GossipConfiguration;
-import com.hellblazer.jmx.cascading.CascadingService;
-import com.hellblazer.jmx.discovery.Hub;
-import com.hellblazer.nexus.GossipScope;
-import com.hellblazer.slp.InvalidSyntaxException;
 import com.yammer.dropwizard.config.Configuration;
 
 /**
@@ -87,22 +73,4 @@ public class HubConfiguration extends Configuration {
      * patterns to accomidate the host and port of the remote MBeanServer.
      */
     public String              targetPath   = "/[%s/%s]";
-
-    public Hub construct() throws InvalidSyntaxException,
-                          InstanceAlreadyExistsException,
-                          MBeanRegistrationException,
-                          NotCompliantMBeanException,
-                          MalformedObjectNameException, SocketException {
-        GossipScope scope = new GossipScope(gossip.construct());
-        scope.start();
-        MBeanServer mbs = MBeanServerFactory.createMBeanServer(domainName);
-        CascadingService cascadingService = new CascadingService();
-        mbs.registerMBean(cascadingService, new ObjectName(name));
-        Hub listener = new Hub(cascadingService, sourcePattern, sourceMap,
-                               scope, targetPath);
-        for (String serviceType : serviceNames) {
-            listener.listenFor("(" + SERVICE_TYPE + "=" + serviceType + ")");
-        }
-        return listener;
-    }
 }

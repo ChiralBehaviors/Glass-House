@@ -16,7 +16,18 @@
 
 package com.hellblazer.jmx;
 
+import static com.hellblazer.slp.ServiceScope.SERVICE_TYPE;
+
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.ObjectName;
+
+import com.hellblazer.gossip.configuration.v1.Helper;
+import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.jmx.discovery.Hub;
+import com.hellblazer.jmx.rest.JmxHealthCheck;
+import com.hellblazer.jmx.rest.MBeanResource;
+import com.hellblazer.nexus.GossipScope;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Environment;
 
@@ -26,6 +37,15 @@ import com.yammer.dropwizard.config.Environment;
  */
 public class HubService extends Service<HubConfiguration> {
 
+    public static void main(String[] argv) throws Exception {
+        new HubService().run(argv);
+    }
+
+    public HubService() {
+        super("JMX Command n' Control");
+        addJacksonModule(Helper.getModule());
+    }
+
     private Hub hub;
 
     /* (non-Javadoc)
@@ -34,7 +54,18 @@ public class HubService extends Service<HubConfiguration> {
     @Override
     protected void initialize(HubConfiguration configuration,
                               Environment environment) throws Exception {
-        this.hub = configuration.construct();
+        MBeanServer mbs = MBeanServerFactory.createMBeanServer(configuration.domainName);
+        GossipScope scope = new GossipScope(configuration.gossip.construct());
+        scope.start();
+        CascadingService cascadingService = new CascadingService();
+        mbs.registerMBean(cascadingService, new ObjectName(configuration.name));
+        hub = new Hub(cascadingService, configuration.sourcePattern,
+                      configuration.sourceMap, scope, configuration.targetPath);
+        for (String serviceType : configuration.serviceNames) {
+            hub.listenFor("(" + SERVICE_TYPE + "=" + serviceType + ")");
+        }
+        environment.addHealthCheck(new JmxHealthCheck());
+        environment.addResource(new MBeanResource(mbs));
     }
 
 }

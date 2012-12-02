@@ -20,7 +20,6 @@ import static com.hellblazer.slp.ServiceScope.SERVICE_TYPE;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.SocketException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -79,10 +78,8 @@ public class Hub {
     public static final String TYPE       = "type";
     public static final String TYPE_NAME  = MBeanServerConnection.class.getSimpleName();
     public static final String URL        = "service.url";
+    
     private static Logger      log        = LoggerFactory.getLogger(Hub.class);
-
-    public static void main(String[] argv) throws SocketException {
-    }
 
     private final Map<ServiceReference, String> registrations = new ConcurrentHashMap<ServiceReference, String>();
     private final Listener                      listener      = new Listener();
