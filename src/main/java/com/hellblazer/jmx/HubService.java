@@ -22,13 +22,14 @@ import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
 
-import com.hellblazer.gossip.configuration.v1.Helper;
+import com.hellblazer.gossip.configuration.YamlHelper;
 import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.jmx.discovery.Hub;
 import com.hellblazer.jmx.rest.JmxHealthCheck;
 import com.hellblazer.jmx.rest.MBeanResource;
 import com.hellblazer.nexus.GossipScope;
 import com.yammer.dropwizard.Service;
+import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 
 /**
@@ -37,35 +38,48 @@ import com.yammer.dropwizard.config.Environment;
  */
 public class HubService extends Service<HubConfiguration> {
 
-    public static void main(String[] argv) throws Exception {
-        new HubService().run(argv);
-    }
+	public static void main(String[] argv) throws Exception {
+		new HubService().run(argv);
+	}
 
-    public HubService() {
-        super("JMX Command n' Control");
-        addJacksonModule(Helper.getModule());
-    }
+	private Hub hub;
 
-    private Hub hub;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.yammer.dropwizard.Service#initialize(com.yammer.dropwizard.config
+	 * .Bootstrap)
+	 */
+	@Override
+	public void initialize(Bootstrap<HubConfiguration> bootstrap) {
+		bootstrap.getObjectMapperFactory().registerModule(
+				YamlHelper.getModule());
+	}
 
-    /* (non-Javadoc)
-     * @see com.yammer.dropwizard.AbstractService#initialize(com.yammer.dropwizard.config.Configuration, com.yammer.dropwizard.config.Environment)
-     */
-    @Override
-    protected void initialize(HubConfiguration configuration,
-                              Environment environment) throws Exception {
-        MBeanServer mbs = MBeanServerFactory.createMBeanServer(configuration.domainName);
-        GossipScope scope = new GossipScope(configuration.gossip.construct());
-        scope.start();
-        CascadingService cascadingService = new CascadingService();
-        mbs.registerMBean(cascadingService, new ObjectName(configuration.name));
-        hub = new Hub(cascadingService, configuration.sourcePattern,
-                      configuration.sourceMap, scope, configuration.targetPath);
-        for (String serviceType : configuration.serviceNames) {
-            hub.listenFor("(" + SERVICE_TYPE + "=" + serviceType + ")");
-        }
-        environment.addHealthCheck(new JmxHealthCheck());
-        environment.addResource(new MBeanResource(mbs));
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.yammer.dropwizard.Service#run(com.yammer.dropwizard.config.Configuration
+	 * , com.yammer.dropwizard.config.Environment)
+	 */
+	@Override
+	public void run(HubConfiguration configuration, Environment environment)
+			throws Exception {
+		MBeanServer mbs = MBeanServerFactory
+				.createMBeanServer(configuration.domainName);
+		GossipScope scope = new GossipScope(configuration.gossip.construct());
+		scope.start();
+		CascadingService cascadingService = new CascadingService();
+		mbs.registerMBean(cascadingService, new ObjectName(configuration.name));
+		hub = new Hub(cascadingService, configuration.sourcePattern,
+				configuration.sourceMap, scope, configuration.targetPath);
+		for (String serviceType : configuration.serviceNames) {
+			hub.listenFor("(" + SERVICE_TYPE + "=" + serviceType + ")");
+		}
+		environment.addHealthCheck(new JmxHealthCheck());
+		environment.addResource(new MBeanResource(mbs));
+	}
 
 }
