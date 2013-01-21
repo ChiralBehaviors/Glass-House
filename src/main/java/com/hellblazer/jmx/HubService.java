@@ -26,7 +26,9 @@ import com.hellblazer.gossip.configuration.YamlHelper;
 import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.jmx.discovery.Hub;
 import com.hellblazer.jmx.rest.JmxHealthCheck;
-import com.hellblazer.jmx.rest.MBeanResource;
+import com.hellblazer.jmx.rest.web.Index;
+import com.hellblazer.jmx.rest.web.Nodes;
+import com.hellblazer.jmx.rest.web.mbean.MBeans;
 import com.hellblazer.nexus.GossipScope;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -79,7 +81,10 @@ public class HubService extends Service<HubConfiguration> {
 			hub.listenFor("(" + SERVICE_TYPE + "=" + serviceType + ")");
 		}
 		environment.addHealthCheck(new JmxHealthCheck());
-		environment.addResource(new MBeanResource(mbs));
+		// environment.addResource(new MBeanResource(mbs));
+		environment.addResource(new MBeans());
+		environment.addResource(new Index());
+		environment.addResource(new Nodes());
 	}
 
 }
