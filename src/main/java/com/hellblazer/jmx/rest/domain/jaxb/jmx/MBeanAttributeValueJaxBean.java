@@ -30,16 +30,20 @@ public class MBeanAttributeValueJaxBean implements
     public String objectName;
     @XmlElement(name = "Value")
     public String value;
+    @XmlElement(name = "Exception")
+    public String exception;
 
     public MBeanAttributeValueJaxBean() {
     }
 
     public MBeanAttributeValueJaxBean(String attributeName, String nodeName,
-                                      String objectName, Object value) {
+                                      String objectName, Object value,
+                                      String exception) {
         this.attributeName = attributeName;
         this.nodeName = nodeName;
         this.objectName = objectName;
         parseValue(value);
+        this.exception = exception;
     }
 
     public int compareTo(MBeanAttributeValueJaxBean o) {
@@ -53,75 +57,69 @@ public class MBeanAttributeValueJaxBean implements
         return i;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        MBeanAttributeValueJaxBean other = (MBeanAttributeValueJaxBean) obj;
-        if (attributeName == null) {
-            if (other.attributeName != null) {
-                return false;
-            }
-        } else if (!attributeName.equals(other.attributeName)) {
-            return false;
-        }
-        if (nodeName == null) {
-            if (other.nodeName != null) {
-                return false;
-            }
-        } else if (!nodeName.equals(other.nodeName)) {
-            return false;
-        }
-        if (objectName == null) {
-            if (other.objectName != null) {
-                return false;
-            }
-        } else if (!objectName.equals(other.objectName)) {
-            return false;
-        }
-        if (value == null) {
-            if (other.value != null) {
-                return false;
-            }
-        } else if (!value.equals(other.value)) {
-            return false;
-        }
-        return true;
-    }
-
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result
-                 + (attributeName == null ? 0 : attributeName.hashCode());
-        result = prime * result + (nodeName == null ? 0 : nodeName.hashCode());
+                 + ((attributeName == null) ? 0 : attributeName.hashCode());
         result = prime * result
-                 + (objectName == null ? 0 : objectName.hashCode());
-        result = prime * result + (value == null ? 0 : value.hashCode());
+                 + ((exception == null) ? 0 : exception.hashCode());
+        result = prime * result
+                 + ((nodeName == null) ? 0 : nodeName.hashCode());
+        result = prime * result
+                 + ((objectName == null) ? 0 : objectName.hashCode());
+        result = prime * result + ((value == null) ? 0 : value.hashCode());
         return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        MBeanAttributeValueJaxBean other = (MBeanAttributeValueJaxBean) obj;
+        if (attributeName == null) {
+            if (other.attributeName != null)
+                return false;
+        } else if (!attributeName.equals(other.attributeName))
+            return false;
+        if (exception == null) {
+            if (other.exception != null)
+                return false;
+        } else if (!exception.equals(other.exception))
+            return false;
+        if (nodeName == null) {
+            if (other.nodeName != null)
+                return false;
+        } else if (!nodeName.equals(other.nodeName))
+            return false;
+        if (objectName == null) {
+            if (other.objectName != null)
+                return false;
+        } else if (!objectName.equals(other.objectName))
+            return false;
+        if (value == null) {
+            if (other.value != null)
+                return false;
+        } else if (!value.equals(other.value))
+            return false;
+        return true;
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("MBeanAttributeValueJaxBean [attributeName=");
-        builder.append(attributeName);
-        builder.append(", nodeName=");
-        builder.append(nodeName);
-        builder.append(", objectName=");
-        builder.append(objectName);
-        builder.append(", value=");
-        builder.append(value);
-        builder.append("]");
-        return builder.toString();
+        return String.format("MBeanAttributeValueJaxBean [attributeName=%s,nodeName=%s,objectName=%s,value=%s]",
+                             attributeName, nodeName, objectName, value);
     }
 
     private void parseValue(Object value) {

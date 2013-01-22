@@ -73,32 +73,33 @@ public class Hub {
 
     }
 
-    public static final String CONFIG_YML = "config.yml";
-    public static final String HOST       = "host";
-    public static final String TYPE       = "type";
-    public static final String TYPE_NAME  = MBeanServerConnection.class.getSimpleName();
-    public static final String URL        = "service.url";
-    
-    private static Logger      log        = LoggerFactory.getLogger(Hub.class);
+    public static final String                  CONFIG_YML    = "config.yml";
+    public static final String                  HOST          = "host";
+    public static final String                  TYPE          = "type";
+    public static final String                  TYPE_NAME     = MBeanServerConnection.class.getSimpleName();
+    public static final String                  URL           = "service.url";
+
+    private static Logger                       log           = LoggerFactory.getLogger(Hub.class);
 
     private final Map<ServiceReference, String> registrations = new ConcurrentHashMap<ServiceReference, String>();
     private final Listener                      listener      = new Listener();
     private final ServiceScope                  scope;
     private final CascadingServiceMBean         cascadingService;
-    private final String                        targetPath;
+    private final String                        nameNodePattern;
     private final ObjectName                    sourcePattern;
     private final Map<String, ?>                sourceMap;
 
     public Hub(CascadingServiceMBean cascadingService, String sourcePattern,
-               Map<String, ?> sourceMap, ServiceScope scope, String targetPath)
-                                                                               throws MalformedObjectNameException {
+               Map<String, ?> sourceMap, ServiceScope scope,
+               String nodeNamePattern) throws MalformedObjectNameException {
         this.cascadingService = cascadingService;
         this.sourcePattern = sourcePattern == null ? null
                                                   : new ObjectName(
                                                                    sourcePattern);
         this.sourceMap = sourceMap;
         this.scope = scope;
-        this.targetPath = targetPath;
+        this.nameNodePattern = nodeNamePattern == null ? "%s:%s"
+                                                      : nodeNamePattern;
     }
 
     @ManagedOperation(description = "Listen for JMX service URLs that match the service query", impact = Impact.ACTION)
@@ -180,10 +181,10 @@ public class Hub {
                               cascadingService.mount(jmxServiceURL,
                                                      sourceMap,
                                                      sourcePattern,
-                                                     targetPath == null ? null
-                                                                       : String.format(targetPath,
-                                                                                       url.getHost(),
-                                                                                       url.getPort())));
+                                                     nameNodePattern == null ? null
+                                                                            : String.format(nameNodePattern,
+                                                                                            url.getHost(),
+                                                                                            url.getPort())));
         } catch (InstanceAlreadyExistsException | IOException e) {
             log.info(String.format("Error registering MBeans for: %s:%s",
                                    url.getHost(), url.getPort()), e);

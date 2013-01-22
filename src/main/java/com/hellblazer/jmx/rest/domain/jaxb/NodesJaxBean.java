@@ -13,21 +13,18 @@
 
 package com.hellblazer.jmx.rest.domain.jaxb;
 
-import java.util.Set;
+import java.util.Collection;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-/* ------------------------------------------------------------ */
-/**
- */
 @XmlRootElement(name = "Index")
 public class NodesJaxBean {
-    public Set<NodeJaxBean> nodes;
+    public Collection<String> nodes;
 
     public NodesJaxBean() {
     }
 
-    public NodesJaxBean(Set<NodeJaxBean> nodes) {
+    public NodesJaxBean(Collection<String> nodes) {
         this.nodes = nodes;
     }
 

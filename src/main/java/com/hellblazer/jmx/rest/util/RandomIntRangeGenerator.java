@@ -12,10 +12,7 @@
 // ========================================================================
 
 package com.hellblazer.jmx.rest.util;
-
-/* ------------------------------------------------------------ */
-/**
- */
+ 
 public class RandomIntRangeGenerator {
     public static int getRandomInt(int min, int max) {
         int maxMinSubtraction = max - min + 1;

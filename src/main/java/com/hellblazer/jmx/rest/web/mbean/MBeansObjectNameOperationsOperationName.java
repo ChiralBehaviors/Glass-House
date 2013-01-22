@@ -25,51 +25,42 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hellblazer.jmx.rest.domain.JMXNode;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
-import com.hellblazer.jmx.rest.util.FilterNodesUtils;
 import com.hellblazer.jmx.rest.web.BaseAggregateWebController;
-
-/* ------------------------------------------------------------ */
-/**
- */
+ 
 @Path("/mbeans/{objectName}/operations/{operationName}")
 public class MBeansObjectNameOperationsOperationName extends
-		BaseAggregateWebController {
-	private static Logger log = LoggerFactory
-			.getLogger(MBeansObjectNameAttributes.class);
+        BaseAggregateWebController {
+    private static Logger log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
 
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-	public OperationReturnValueJaxBeans invokeOperation(
-			@PathParam("objectName") String objectName,
-			@PathParam("operationName") String operationName,
-			@QueryParam("nodes") String nodes) {
-		log.info("invokeOperationWithParameters: " + operationName);
-		Collection<JMXNode> jmxNodes = FilterNodesUtils
-				.getNodesToAggregate(nodes);
+    @GET
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public OperationReturnValueJaxBeans invokeOperation(@PathParam("objectName") String objectName,
+                                                        @PathParam("operationName") String operationName,
+                                                        @QueryParam("nodes") String nodes) {
+        log.info("invokeOperationWithParameters: " + operationName);
+        Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
-		return aggregateService.invokeOperation(jmxNodes, objectName,
-				operationName);
-	}
+        return aggregateService.invokeOperation(jmxNodes, objectName,
+                                                operationName);
+    }
 
-	@GET
-	@Path("/{params}/{signature}")
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-	public OperationReturnValueJaxBeans invokeOperationWithParameters(
-			@PathParam("objectName") String objectName,
-			@PathParam("operationName") String operationName,
-			@PathParam("params") String params,
-			@PathParam("signature") String signature,
-			@QueryParam("nodes") String nodes) {
-		log.info("invokeOperationWithParameters: " + operationName);
-		Collection<JMXNode> jmxNodes = FilterNodesUtils
-				.getNodesToAggregate(nodes);
+    @GET
+    @Path("/{params}/{signature}")
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public OperationReturnValueJaxBeans invokeOperationWithParameters(@PathParam("objectName") String objectName,
+                                                                      @PathParam("operationName") String operationName,
+                                                                      @PathParam("params") String params,
+                                                                      @PathParam("signature") String signature,
+                                                                      @QueryParam("nodes") String nodes) {
+        log.info("invokeOperationWithParameters: " + operationName);
+        Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
-		String[] paramArray = params.split(",");
-		String[] signatureArray = signature.split(",");
-		return aggregateService.invokeOperation(jmxNodes, objectName,
-				operationName, paramArray, signatureArray);
-	}
+        String[] paramArray = params.split(",");
+        String[] signatureArray = signature.split(",");
+        return aggregateService.invokeOperation(jmxNodes, objectName,
+                                                operationName, paramArray,
+                                                signatureArray);
+    }
 
 }

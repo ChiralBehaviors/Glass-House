@@ -20,13 +20,8 @@ import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.hellblazer.jmx.rest.domain.JMXNode;
 import com.hellblazer.jmx.rest.service.JMXNodeService;
-import com.hellblazer.jmx.rest.service.impl.JMXNodeServiceImpl;
 
-/* ------------------------------------------------------------ */
-/**
- */
 public class JMXNodeServiceTest {
     JMXNodeService jmxNodeService = new JMXNodeServiceImpl();
 
@@ -45,7 +40,7 @@ public class JMXNodeServiceTest {
      */
     @Test
     public void testGetNodes() {
-        Collection<JMXNode> jmxNodes = jmxNodeService.getNodes();
+        Collection<String> jmxNodes = jmxNodeService.getNodes();
         assertEquals("Two nodes expected", 2, jmxNodes.size());
     }
 

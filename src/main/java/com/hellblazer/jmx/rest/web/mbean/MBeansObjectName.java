@@ -28,44 +28,38 @@ import javax.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hellblazer.jmx.rest.domain.JMXNode;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
-import com.hellblazer.jmx.rest.util.FilterNodesUtils;
 import com.hellblazer.jmx.rest.web.BaseAggregateWebController;
 
-/* ------------------------------------------------------------ */
-/**
- */
 @Path("/mbeans/{objectName}")
 public class MBeansObjectName extends BaseAggregateWebController {
-	private static Logger log = LoggerFactory
-			.getLogger(MBeansObjectNameAttributes.class);
-	@Context
-	UriInfo uriInfo;
+    private static Logger log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
+    @Context
+    UriInfo               uriInfo;
 
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-	public MBeanJaxBean getOperations(
-			@PathParam("objectName") String objectName,
-			@QueryParam("nodes") String nodes) {
-		Collection<JMXNode> jmxNodes = FilterNodesUtils
-				.getNodesToAggregate(nodes);
+    @GET
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public MBeanJaxBean getOperations(@PathParam("objectName") String objectName,
+                                      @QueryParam("nodes") String nodes) {
+        Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
-		MBeanAttributeJaxBeans mBeanAttributesJaxBean;
-		MBeanOperationJaxBeans mBeanOperationsJaxBean;
-		try {
-			mBeanAttributesJaxBean = aggregateService.getAttributesMetaData(
-					uriInfo, jmxNodes, objectName);
-			mBeanOperationsJaxBean = aggregateService.getOperationsMetaData(
-					uriInfo, jmxNodes, objectName);
-		} catch (InstanceNotFoundException e) {
-			log.info("getOperations: ", e);
-			return MBeanJaxBean.EMPTY_MBEAN_JAX_BEAN;
-		}
-		return new MBeanJaxBean(objectName, mBeanOperationsJaxBean,
-				mBeanAttributesJaxBean);
-	}
+        MBeanAttributeJaxBeans mBeanAttributesJaxBean;
+        MBeanOperationJaxBeans mBeanOperationsJaxBean;
+        try {
+            mBeanAttributesJaxBean = aggregateService.getAttributesMetaData(uriInfo,
+                                                                            jmxNodes,
+                                                                            objectName);
+            mBeanOperationsJaxBean = aggregateService.getOperationsMetaData(uriInfo,
+                                                                            jmxNodes,
+                                                                            objectName);
+        } catch (InstanceNotFoundException e) {
+            log.info("getOperations: ", e);
+            return MBeanJaxBean.EMPTY_MBEAN_JAX_BEAN;
+        }
+        return new MBeanJaxBean(objectName, mBeanOperationsJaxBean,
+                                mBeanAttributesJaxBean);
+    }
 
 }

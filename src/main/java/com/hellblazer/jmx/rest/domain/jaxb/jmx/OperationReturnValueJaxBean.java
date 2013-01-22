@@ -26,13 +26,16 @@ public class OperationReturnValueJaxBean implements
     @XmlElement(name = "NodeName")
     public String nodeName;
     public String returnValue;
+    public String exception;
 
     public OperationReturnValueJaxBean() {
     }
 
-    public OperationReturnValueJaxBean(String nodeName, Object object) {
+    public OperationReturnValueJaxBean(String nodeName, Object object,
+                                       String exception) {
         this.nodeName = nodeName;
         returnValue = object == null ? "success" : object.toString();
+        this.exception = exception;
     }
 
     public int compareTo(OperationReturnValueJaxBean o) {

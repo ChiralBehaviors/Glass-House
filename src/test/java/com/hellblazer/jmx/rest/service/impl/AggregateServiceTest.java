@@ -48,8 +48,6 @@ import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.jmx.rest.service.AggregateService;
 import com.hellblazer.jmx.rest.service.JMXNodeService;
 import com.hellblazer.jmx.rest.service.JMXService;
-import com.hellblazer.jmx.rest.service.impl.AggregateServiceImpl;
-import com.hellblazer.jmx.rest.service.impl.JMXServiceImpl;
 import com.hellblazer.jmx.rest.util.JMXServiceURLUtils;
 
 public class AggregateServiceTest extends AbstractMockitoTest {

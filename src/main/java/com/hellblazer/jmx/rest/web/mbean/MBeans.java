@@ -23,14 +23,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import com.hellblazer.jmx.rest.domain.JMXNode;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
-import com.hellblazer.jmx.rest.util.FilterNodesUtils;
 import com.hellblazer.jmx.rest.web.BaseAggregateWebController;
 
-/* ------------------------------------------------------------ */
-/**
- */
 @Path("jmx/mbeans")
 public class MBeans extends BaseAggregateWebController {
     @Context
@@ -39,7 +34,7 @@ public class MBeans extends BaseAggregateWebController {
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public MBeanShortJaxBeans getMBeans(@QueryParam("nodes") String nodes) {
-        Collection<JMXNode> jmxNodes = FilterNodesUtils.getNodesToAggregate(nodes);
+        Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
         return aggregateService.getMBeanShortJaxBeans(uriInfo, jmxNodes);
     }
 

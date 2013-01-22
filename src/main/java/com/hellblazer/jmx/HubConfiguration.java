@@ -68,9 +68,9 @@ public class HubConfiguration extends Configuration {
     public String              sourcePattern;
 
     /**
-     * The <i>domain path</i> under which the source MBeans will be mounted in
+     * The <i>node name property</i> under which the source MBeans will be mounted in
      * the target <tt>MBeanServer</tt>. This string may contain up to 2 %s
      * patterns to accomidate the host and port of the remote MBeanServer.
      */
-    public String              targetPath   = "/[%s/%s]";
+    public String              nodeNamePattern   = "%s:%s";
 }

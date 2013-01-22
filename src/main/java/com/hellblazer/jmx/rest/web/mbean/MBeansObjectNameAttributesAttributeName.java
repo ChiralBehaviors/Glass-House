@@ -15,7 +15,6 @@ package com.hellblazer.jmx.rest.web.mbean;
 
 import java.util.Collection;
 
-import javax.management.InstanceNotFoundException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -25,40 +24,23 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.hellblazer.jmx.rest.domain.JMXNode;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBeans;
-import com.hellblazer.jmx.rest.util.FilterNodesUtils;
 import com.hellblazer.jmx.rest.web.BaseAggregateWebController;
 
-/* ------------------------------------------------------------ */
-/**
- */
 @Path("/mbeans/{objectName}/attributes/{attributeName}")
 public class MBeansObjectNameAttributesAttributeName extends
-		BaseAggregateWebController {
-	private static Logger log = LoggerFactory
-			.getLogger(MBeansObjectNameAttributes.class);
-	@Context
-	UriInfo uriInfo;
+        BaseAggregateWebController {
+    @Context
+    UriInfo uriInfo;
 
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-	public MBeanAttributeValueJaxBeans getAttribute(
-			@PathParam("objectName") String objectName,
-			@PathParam("attributeName") String attributeName,
-			@QueryParam("nodes") String nodes) {
-		Collection<JMXNode> jmxNodes = FilterNodesUtils
-				.getNodesToAggregate(nodes);
-		try {
-			return aggregateService.getAttributeValues(jmxNodes, objectName,
-					attributeName);
-		} catch (InstanceNotFoundException e) {
-			log.info("getAttribute: ", e);
-			return null;
-		}
-	}
+    @GET
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public MBeanAttributeValueJaxBeans getAttribute(@PathParam("objectName") String objectName,
+                                                    @PathParam("attributeName") String attributeName,
+                                                    @QueryParam("nodes") String nodes) {
+        Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
+        return aggregateService.getAttributeValues(jmxNodes, objectName,
+                                                   attributeName);
+    }
 
 }

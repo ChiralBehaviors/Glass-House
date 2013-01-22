@@ -1,24 +1,31 @@
 package com.hellblazer.jmx.rest.service.impl;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
+import javax.management.IntrospectionException;
 import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanException;
 import javax.management.MBeanOperationInfo;
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.management.openmbean.CompositeData;
-import javax.management.remote.JMXServiceURL;
+import javax.management.ReflectionException;
 import javax.ws.rs.core.UriInfo;
 
-import com.hellblazer.jmx.rest.domain.JMXNode;
-import com.hellblazer.jmx.rest.domain.jaxb.NodeJaxBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBean;
@@ -30,49 +37,53 @@ import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
 import com.hellblazer.jmx.rest.service.AggregateService;
-import com.hellblazer.jmx.rest.service.JMXNodeService;
 import com.hellblazer.jmx.rest.service.JMXService;
 
 public class AggregateServiceImpl implements AggregateService {
-    private static final String[] HEAP_MEMORY_KEYS = new String[] { "init",
-            "used", "committed", "max"            };
-    public static final String    ID_REPLACE_REGEX = ",id=\\d+";
+    private static Logger      log              = LoggerFactory.getLogger(AggregateServiceImpl.class);
+    public static final String ID_REPLACE_REGEX = ",id=\\d+";
 
-    private JMXService            _jmxService;
-    // TODO: IOC
-    private JMXNodeService        _jmxNodeService  = new JMXNodeServiceImpl();
+    private JMXService         _jmxService;
+    private final List<String> mBeanServerNodes = new CopyOnWriteArrayList<String>();
 
     public AggregateServiceImpl(JMXService jmxService) {
         _jmxService = jmxService;
     }
 
-    public MBeanAttributeValueJaxBeans getAllAttributeValues(Collection<JMXNode> jmxNodes,
-                                                             String objectName)
-                                                                               throws InstanceNotFoundException {
+    @Override
+    public MBeanAttributeValueJaxBeans getAllAttributeValues(Collection<String> jmxNodes,
+                                                             String objectName) {
         Set<MBeanAttributeValueJaxBean> mBeanAttributeValueJaxBeans = new TreeSet<MBeanAttributeValueJaxBean>();
         Map<String, MBeanAttributeInfo> mBeanAttributeInfos = aggregateMBeanAttributeInfos(jmxNodes,
                                                                                            objectName);
-        for (JMXNode jmxNode : jmxNodes) {
-            JMXServiceURL jmxServiceURL = jmxNode.getJmxServiceURL();
+        for (String jmxNode : jmxNodes) {
             Set<String> objectNames = parseObjectNameToAggregateMBeansWithMultipleIDs(objectName,
-                                                                                      jmxServiceURL);
+                                                                                      jmxNode);
             try {
                 mBeanAttributeValueJaxBeans.addAll(getAttributeValues(objectNames,
                                                                       mBeanAttributeInfos,
                                                                       jmxNode));
             } catch (InstanceNotFoundException e) {
-                objectNames = _jmxService.getObjectNamesByPrefix(jmxServiceURL,
-                                                                 objectName);
-                mBeanAttributeValueJaxBeans.addAll(getAttributeValues(objectNames,
-                                                                      mBeanAttributeInfos,
-                                                                      jmxNode));
+                try {
+                    objectNames = _jmxService.getObjectNamesByPrefix(jmxNode,
+                                                                     objectName);
+                    mBeanAttributeValueJaxBeans.addAll(getAttributeValues(objectNames,
+                                                                          mBeanAttributeInfos,
+                                                                          jmxNode));
+                } catch (MalformedObjectNameException | NullPointerException e1) {
+                    log.warn(String.format("Invalid name %s", objectName));
+                } catch (InstanceNotFoundException e1) {
+                    log.warn(String.format("Instance %s not found on %s",
+                                           objectName, jmxNode));
+                }
             }
         }
         return new MBeanAttributeValueJaxBeans(mBeanAttributeValueJaxBeans);
     }
 
+    @Override
     public MBeanAttributeJaxBeans getAttributesMetaData(UriInfo uriInfo,
-                                                        Collection<JMXNode> jmxNodes,
+                                                        Collection<String> jmxNodes,
                                                         String objectName)
                                                                           throws InstanceNotFoundException {
         Set<MBeanAttributeJaxBean> mBeanAttributeJaxBeans = new TreeSet<MBeanAttributeJaxBean>();
@@ -88,42 +99,63 @@ public class AggregateServiceImpl implements AggregateService {
         return new MBeanAttributeJaxBeans(mBeanAttributeJaxBeans);
     }
 
-    public MBeanAttributeValueJaxBeans getAttributeValues(Collection<JMXNode> jmxNodes,
+    @Override
+    public MBeanAttributeValueJaxBeans getAttributeValues(Collection<String> jmxNodes,
                                                           String objectName,
-                                                          String attributeName)
-                                                                               throws InstanceNotFoundException {
+                                                          String attributeName) {
         Set<MBeanAttributeValueJaxBean> mBeanAttributeValueJaxBeans = new TreeSet<MBeanAttributeValueJaxBean>();
-        for (JMXNode jmxNode : jmxNodes) {
-            JMXServiceURL jmxServiceURL = jmxNode.getJmxServiceURL();
+        for (String jmxNode : jmxNodes) {
             Set<String> objectNames = parseObjectNameToAggregateMBeansWithMultipleIDs(objectName,
-                                                                                      jmxServiceURL);
+                                                                                      jmxNode);
             try {
                 getAttributeValuesForNode(attributeName,
                                           mBeanAttributeValueJaxBeans, jmxNode,
                                           objectNames);
             } catch (InstanceNotFoundException e) {
-                objectNames = _jmxService.getObjectNamesByPrefix(jmxServiceURL,
-                                                                 objectName);
-                getAttributeValuesForNode(attributeName,
-                                          mBeanAttributeValueJaxBeans, jmxNode,
-                                          objectNames);
+                try {
+                    objectNames = _jmxService.getObjectNamesByPrefix(jmxNode,
+                                                                     objectName);
+                    getAttributeValuesForNode(attributeName,
+                                              mBeanAttributeValueJaxBeans,
+                                              jmxNode, objectNames);
+                } catch (MalformedObjectNameException | NullPointerException e1) {
+                    log.warn(String.format("Invalid name %s", objectName));
+                } catch (InstanceNotFoundException e1) {
+                    log.debug(String.format("Instance %s not found on %s",
+                                            objectName, jmxNode));
+                }
             }
         }
         return new MBeanAttributeValueJaxBeans(mBeanAttributeValueJaxBeans);
     }
 
+    /* (non-Javadoc)
+     * @see com.hellblazer.jmx.rest.service.AggregateService#getMbeanServerNodes()
+     */
+    @Override
+    public List<String> getMbeanServerNodes() {
+        return mBeanServerNodes;
+    }
+
+    @Override
     public MBeanShortJaxBeans getMBeanShortJaxBeans(UriInfo uriInfo,
-                                                    Collection<JMXNode> jmxNodes) {
+                                                    Collection<String> jmxNodes) {
         Set<ObjectName> commonObjectNames = new HashSet<ObjectName>();
 
         Set<MBeanShortJaxBean> mBeanShortJaxBeans = new TreeSet<MBeanShortJaxBean>();
-        for (JMXNode jmxNode : jmxNodes) {
-            Set<ObjectName> nodeObjectNames = _jmxService.getObjectNames(jmxNode.getJmxServiceURL());
-            if (commonObjectNames.isEmpty()) {
-                commonObjectNames.addAll(nodeObjectNames);
-            } else {
-                removeObjectNamesWhichDoNotExistOnCurrentNode(commonObjectNames,
-                                                              nodeObjectNames);
+        for (String jmxNode : jmxNodes) {
+            Set<ObjectName> nodeObjectNames;
+            try {
+                nodeObjectNames = _jmxService.getObjectNames(jmxNode);
+                if (commonObjectNames.isEmpty()) {
+                    commonObjectNames.addAll(nodeObjectNames);
+                } else {
+                    removeObjectNamesWhichDoNotExistOnCurrentNode(commonObjectNames,
+                                                                  nodeObjectNames);
+                }
+            } catch (MalformedObjectNameException | NullPointerException e) {
+                log.warn(String.format("Exception getting object names for node %s",
+                                       jmxNode));
             }
 
         }
@@ -134,31 +166,15 @@ public class AggregateServiceImpl implements AggregateService {
         return new MBeanShortJaxBeans(mBeanShortJaxBeans);
     }
 
-    public Set<NodeJaxBean> getNodes() {
-        Set<NodeJaxBean> nodes = new TreeSet<NodeJaxBean>();
-        for (JMXNode jmxNode : _jmxNodeService.getNodes()) {
-            JMXServiceURL jmxServiceURL = jmxNode.getJmxServiceURL();
-            String jettyVersion;
-            try {
-                jettyVersion = getJettyVersions(jmxServiceURL);
-                Map<String, Long> nodeMemoryUsageMap = getMemoryByNode(jmxNode);
-                NodeJaxBean NodeJaxBean = new NodeJaxBean.NodeJaxBeanBuilder(
-                                                                             jmxNode.getNodeName(),
-                                                                             jettyVersion,
-                                                                             jmxServiceURL).memory(nodeMemoryUsageMap).threadCount(getThreadCount(jmxServiceURL)).peakThreadCount(getPeakThreadCount(jmxServiceURL)).build();
-                nodes.add(NodeJaxBean);
-            } catch (InstanceNotFoundException e) {
-                throw new IllegalStateException("While fetching data for: "
-                                                + jmxNode.getNodeName(), e);
-            }
-        }
-        return nodes;
+    @Override
+    public Collection<String> getNodes() {
+        return mBeanServerNodes;
     }
 
+    @Override
     public MBeanOperationJaxBeans getOperationsMetaData(UriInfo uriInfo,
-                                                        Collection<JMXNode> jmxNodes,
-                                                        String objectName)
-                                                                          throws InstanceNotFoundException {
+                                                        Collection<String> jmxNodes,
+                                                        String objectName) {
         Set<MBeanOperationJaxBean> mBeanOperationJaxBeans = new TreeSet<MBeanOperationJaxBean>();
         Map<String, MBeanOperationInfo> mBeanOperations = aggregateOperations(jmxNodes,
                                                                               objectName);
@@ -171,34 +187,54 @@ public class AggregateServiceImpl implements AggregateService {
         return new MBeanOperationJaxBeans(objectName, mBeanOperationJaxBeans);
     }
 
-    public OperationReturnValueJaxBeans invokeOperation(Collection<JMXNode> jmxNodes,
+    @Override
+    public OperationReturnValueJaxBeans invokeOperation(Collection<String> jmxNodes,
                                                         String objectName,
                                                         String operationName) {
         Set<OperationReturnValueJaxBean> operationReturnValueJaxBeans = new TreeSet<OperationReturnValueJaxBean>();
-        for (JMXNode jmxNode : jmxNodes) {
-            Object returnValue = _jmxService.invoke(jmxNode.getJmxServiceURL(),
-                                                    objectName, operationName,
-                                                    null, null);
+        for (String jmxNode : jmxNodes) {
+            String exception = null;
+            Object returnValue = null;
+            try {
+                returnValue = _jmxService.invoke(jmxNode, objectName,
+                                                 operationName, null, null);
+            } catch (MalformedObjectNameException | ReflectionException
+                    | MBeanException e) {
+                exception = e.toString();
+            } catch (InstanceNotFoundException e) {
+                log.debug("Instance %s not found on %s", objectName, jmxNode);
+                break;
+            }
             operationReturnValueJaxBeans.add(new OperationReturnValueJaxBean(
-                                                                             jmxNode.getNodeName(),
-                                                                             returnValue));
+                                                                             jmxNode,
+                                                                             returnValue,
+                                                                             exception));
         }
         return new OperationReturnValueJaxBeans(operationReturnValueJaxBeans);
     }
 
-    public OperationReturnValueJaxBeans invokeOperation(Collection<JMXNode> jmxNodes,
+    @Override
+    public OperationReturnValueJaxBeans invokeOperation(Collection<String> jmxNodes,
                                                         String objectName,
                                                         String operationName,
                                                         Object[] params,
                                                         String[] signature) {
         Set<OperationReturnValueJaxBean> operationReturnValueJaxBeans = new TreeSet<OperationReturnValueJaxBean>();
-        for (JMXNode jmxNode : jmxNodes) {
-            Object returnValue = _jmxService.invoke(jmxNode.getJmxServiceURL(),
-                                                    objectName, operationName,
-                                                    params, signature);
+        for (String jmxNode : jmxNodes) {
+            Object returnValue = null;
+            String exception = null;
+            try {
+                returnValue = _jmxService.invoke(jmxNode, objectName,
+                                                 operationName, params,
+                                                 signature);
+            } catch (MalformedObjectNameException | InstanceNotFoundException
+                    | ReflectionException | MBeanException e) {
+                exception = e.toString();
+            }
             operationReturnValueJaxBeans.add(new OperationReturnValueJaxBean(
-                                                                             jmxNode.getNodeName(),
-                                                                             returnValue));
+                                                                             jmxNode,
+                                                                             returnValue,
+                                                                             exception));
         }
         return new OperationReturnValueJaxBeans(operationReturnValueJaxBeans);
     }
@@ -217,31 +253,38 @@ public class AggregateServiceImpl implements AggregateService {
         }
     }
 
-    private Map<String, MBeanAttributeInfo> aggregateMBeanAttributeInfos(Collection<JMXNode> jmxNodes,
-                                                                         String objectName)
-                                                                                           throws InstanceNotFoundException {
+    private Map<String, MBeanAttributeInfo> aggregateMBeanAttributeInfos(Collection<String> jmxNodes,
+                                                                         String objectName) {
         Map<String, MBeanAttributeInfo> mBeanAttributeInfos = new HashMap<String, MBeanAttributeInfo>();
         Set<String> nonEqualAttributeNamesToRemove = new HashSet<String>();
-        for (JMXNode jmxNode : jmxNodes) {
-            JMXServiceURL jmxServiceURL = jmxNode.getJmxServiceURL();
+        for (String jmxNode : jmxNodes) {
             Set<String> objectNames = parseObjectNameToAggregateMBeansWithMultipleIDs(objectName,
-                                                                                      jmxServiceURL);
+                                                                                      jmxNode);
 
             try {
                 if (!aggregateMBeanAttributeInfosForNode(mBeanAttributeInfos,
                                                          nonEqualAttributeNamesToRemove,
-                                                         jmxServiceURL,
-                                                         objectNames)) {
+                                                         jmxNode, objectNames)) {
                     return Collections.emptyMap();
                 }
             } catch (InstanceNotFoundException e) {
-                objectNames = _jmxService.getObjectNamesByPrefix(jmxServiceURL,
-                                                                 objectName);
-                if (!aggregateMBeanAttributeInfosForNode(mBeanAttributeInfos,
-                                                         nonEqualAttributeNamesToRemove,
-                                                         jmxServiceURL,
-                                                         objectNames)) {
-                    return Collections.emptyMap();
+                try {
+                    objectNames = _jmxService.getObjectNamesByPrefix(jmxNode,
+                                                                     objectName);
+                } catch (MalformedObjectNameException | NullPointerException e1) {
+                    log.debug(String.format("Invalid object name %s",
+                                            objectName), e1);
+                }
+                try {
+                    if (!aggregateMBeanAttributeInfosForNode(mBeanAttributeInfos,
+                                                             nonEqualAttributeNamesToRemove,
+                                                             jmxNode,
+                                                             objectNames)) {
+                        return Collections.emptyMap();
+                    }
+                } catch (InstanceNotFoundException e1) {
+                    log.debug(String.format("Cannot find instance %s on %s",
+                                            objectName, jmxNode), e1);
                 }
             }
         }
@@ -253,17 +296,25 @@ public class AggregateServiceImpl implements AggregateService {
 
     private boolean aggregateMBeanAttributeInfosForNode(Map<String, MBeanAttributeInfo> mBeanAttributeInfos,
                                                         Set<String> nonEqualAttributeNamesToRemove,
-                                                        JMXServiceURL jmxServiceURL,
+                                                        String jmxNode,
                                                         Set<String> objectNames)
                                                                                 throws InstanceNotFoundException {
         for (String aggregatedObjectName : objectNames) {
-            MBeanAttributeInfo[] mBeanAttributeInfoArray = _jmxService.getAttributes(jmxServiceURL,
-                                                                                     aggregatedObjectName);
-            if (mBeanAttributeInfoArray != null) {
-                addAttributeInfosToMap(mBeanAttributeInfos,
-                                       nonEqualAttributeNamesToRemove,
-                                       mBeanAttributeInfoArray);
-            } else {
+            MBeanAttributeInfo[] mBeanAttributeInfoArray;
+            try {
+                mBeanAttributeInfoArray = _jmxService.getAttributes(jmxNode,
+                                                                    aggregatedObjectName);
+                if (mBeanAttributeInfoArray != null) {
+                    addAttributeInfosToMap(mBeanAttributeInfos,
+                                           nonEqualAttributeNamesToRemove,
+                                           mBeanAttributeInfoArray);
+                } else {
+                    return false;
+                }
+            } catch (IntrospectionException | MalformedObjectNameException
+                    | ReflectionException e) {
+                log.warn("Unable to get attribute info for %s on %s",
+                         aggregatedObjectName, jmxNode);
                 return false;
             }
         }
@@ -273,54 +324,69 @@ public class AggregateServiceImpl implements AggregateService {
     private boolean aggregateMBeanOperationInfosForNode(Set<String> objectNames,
                                                         Map<String, MBeanOperationInfo> mBeanOperations,
                                                         Set<MBeanOperationInfo> nonEqualOperationsToRemove,
-                                                        JMXServiceURL jmxServiceURL)
-                                                                                    throws InstanceNotFoundException {
+                                                        String jmxNode)
+                                                                       throws InstanceNotFoundException {
         for (String aggregatedObjectName : objectNames) {
-            MBeanOperationInfo[] mBeanOperationInfoArray = _jmxService.getOperations(jmxServiceURL,
-                                                                                     aggregatedObjectName);
-            if (mBeanOperationInfoArray != null) {
-                for (MBeanOperationInfo mBeanOperationInfo : mBeanOperationInfoArray) {
-                    if (mBeanOperations.containsKey(mBeanOperationInfo.getName())
-                        && !mBeanOperations.get(mBeanOperationInfo.getName()).equals(mBeanOperationInfo)) {
-                        nonEqualOperationsToRemove.add(mBeanOperationInfo);
-                    } else {
-                        mBeanOperations.put(mBeanOperationInfo.getName(),
-                                            mBeanOperationInfo);
+            MBeanOperationInfo[] mBeanOperationInfoArray;
+            try {
+                mBeanOperationInfoArray = _jmxService.getOperations(jmxNode,
+                                                                    aggregatedObjectName);
+                if (mBeanOperationInfoArray != null) {
+                    for (MBeanOperationInfo mBeanOperationInfo : mBeanOperationInfoArray) {
+                        if (mBeanOperations.containsKey(mBeanOperationInfo.getName())
+                            && !mBeanOperations.get(mBeanOperationInfo.getName()).equals(mBeanOperationInfo)) {
+                            nonEqualOperationsToRemove.add(mBeanOperationInfo);
+                        } else {
+                            mBeanOperations.put(mBeanOperationInfo.getName(),
+                                                mBeanOperationInfo);
+                        }
                     }
+                } else {
+                    return false;
                 }
-            } else {
-                return false;
+            } catch (IntrospectionException | MalformedObjectNameException
+                    | ReflectionException e) {
+                log.warn(String.format("Cannot retrieve operation information for node %s",
+                                       jmxNode));
             }
         }
         return true;
     }
 
-    private Map<String, MBeanOperationInfo> aggregateOperations(Collection<JMXNode> jmxNodes,
-                                                                String objectName)
-                                                                                  throws InstanceNotFoundException {
+    private Map<String, MBeanOperationInfo> aggregateOperations(Collection<String> jmxNodes,
+                                                                String objectName) {
 
         Map<String, MBeanOperationInfo> mBeanOperations = new HashMap<String, MBeanOperationInfo>();
         Set<MBeanOperationInfo> nonEqualOperationsToRemove = new HashSet<MBeanOperationInfo>();
         // TODO: three nested for loops and some if clauses...too high cyclomatic complexity
-        for (JMXNode jmxNode : jmxNodes) {
-            JMXServiceURL jmxServiceURL = jmxNode.getJmxServiceURL();
+        for (String jmxNode : jmxNodes) {
             Set<String> objectNames = parseObjectNameToAggregateMBeansWithMultipleIDs(objectName,
-                                                                                      jmxServiceURL);
+                                                                                      jmxNode);
             try {
                 if (!aggregateMBeanOperationInfosForNode(objectNames,
                                                          mBeanOperations,
                                                          nonEqualOperationsToRemove,
-                                                         jmxServiceURL)) {
+                                                         jmxNode)) {
                     return Collections.emptyMap();
                 }
             } catch (InstanceNotFoundException e) {
-                objectNames = _jmxService.getObjectNamesByPrefix(jmxServiceURL,
-                                                                 objectName);
-                if (!aggregateMBeanOperationInfosForNode(objectNames,
-                                                         mBeanOperations,
-                                                         nonEqualOperationsToRemove,
-                                                         jmxServiceURL)) {
-                    return Collections.emptyMap();
+                try {
+                    objectNames = _jmxService.getObjectNamesByPrefix(jmxNode,
+                                                                     objectName);
+                    try {
+                        if (!aggregateMBeanOperationInfosForNode(objectNames,
+                                                                 mBeanOperations,
+                                                                 nonEqualOperationsToRemove,
+                                                                 jmxNode)) {
+                            return Collections.emptyMap();
+                        }
+                    } catch (InstanceNotFoundException e1) {
+                        log.debug(String.format("Cannot find instance %s on %s",
+                                                objectName, jmxNode), e1);
+                    }
+                } catch (MalformedObjectNameException | NullPointerException e1) {
+                    log.warn(String.format("Malformed object name %s",
+                                           objectName), e1);
                 }
             }
         }
@@ -332,8 +398,8 @@ public class AggregateServiceImpl implements AggregateService {
 
     private Set<MBeanAttributeValueJaxBean> getAttributeValues(Set<String> objectNames,
                                                                Map<String, MBeanAttributeInfo> mBeanAttributeInfos,
-                                                               JMXNode jmxNode)
-                                                                               throws InstanceNotFoundException {
+                                                               String jmxNode)
+                                                                              throws InstanceNotFoundException {
         Set<MBeanAttributeValueJaxBean> mBeanAttributeValueJaxBeans = new TreeSet<MBeanAttributeValueJaxBean>();
         for (String attributeName : mBeanAttributeInfos.keySet()) {
             getAttributeValuesForNode(attributeName,
@@ -345,43 +411,26 @@ public class AggregateServiceImpl implements AggregateService {
 
     private void getAttributeValuesForNode(String attributeName,
                                            Set<MBeanAttributeValueJaxBean> mBeanAttributeValueJaxBeans,
-                                           JMXNode jmxNode,
+                                           String jmxNode,
                                            Set<String> objectNames)
                                                                    throws InstanceNotFoundException {
         for (String aggregatedObjectName : objectNames) {
-            Object value = _jmxService.getAttribute(jmxNode.getJmxServiceURL(),
-                                                    aggregatedObjectName,
-                                                    attributeName);
+            Object value = null;
+            String exception = null;
+            try {
+                value = _jmxService.getAttribute(jmxNode, aggregatedObjectName,
+                                                 attributeName);
+            } catch (AttributeNotFoundException | MalformedObjectNameException
+                    | MBeanException | ReflectionException e) {
+                exception = e.toString();
+            }
             mBeanAttributeValueJaxBeans.add(new MBeanAttributeValueJaxBean(
                                                                            attributeName,
-                                                                           jmxNode.getNodeName(),
+                                                                           jmxNode,
                                                                            aggregatedObjectName,
-                                                                           value));
+                                                                           value,
+                                                                           exception));
         }
-    }
-
-    private String getJettyVersions(JMXServiceURL jmxServiceURL)
-                                                                throws InstanceNotFoundException {
-        return (String) _jmxService.getAttribute(jmxServiceURL,
-                                                 JMXServiceImpl.JETTY_SERVER_MBEAN,
-                                                 "version");
-    }
-
-    private Map<String, Long> getMemoryByNode(JMXNode jmxNode)
-                                                              throws InstanceNotFoundException {
-        JMXServiceURL jmxServiceURL = jmxNode.getJmxServiceURL();
-        CompositeData memoryCompositeData = (CompositeData) _jmxService.getAttribute(jmxServiceURL,
-                                                                                     JMXServiceImpl.MEMORY_MXBEAN,
-                                                                                     JMXServiceImpl.MEMORY_MXBEAN_HEAP);
-        Map<String, Long> nodeMemoryUsageMap = new HashMap<String, Long>();
-        for (String memoryKey : HEAP_MEMORY_KEYS) {
-            if (memoryCompositeData == null) {
-                continue;
-            }
-            Long heapUsage = (Long) memoryCompositeData.get(memoryKey);
-            nodeMemoryUsageMap.put(memoryKey, heapUsage);
-        }
-        return nodeMemoryUsageMap;
     }
 
     private Set<String> getObjectNamesWithoutId(Set<ObjectName> objectNames) {
@@ -391,28 +440,6 @@ public class AggregateServiceImpl implements AggregateService {
                                                                      ""));
         }
         return objectNameStrings;
-    }
-
-    private int getPeakThreadCount(JMXServiceURL jmxServiceURL)
-                                                               throws InstanceNotFoundException {
-        Object value = _jmxService.getAttribute(jmxServiceURL,
-                                                JMXServiceImpl.THREADING_MXBEAN,
-                                                "PeakThreadCount");
-        if (value == null) {
-            return -1;
-        }
-        return (Integer) value;
-    }
-
-    private int getThreadCount(JMXServiceURL jmxServiceURL)
-                                                           throws InstanceNotFoundException {
-        Object value = _jmxService.getAttribute(jmxServiceURL,
-                                                JMXServiceImpl.THREADING_MXBEAN,
-                                                "ThreadCount");
-        if (value == null) {
-            return -1;
-        }
-        return (Integer) value;
     }
 
     private void removeDuplicates(Map<String, MBeanAttributeInfo> mBeanAttributeInfos,
@@ -440,19 +467,38 @@ public class AggregateServiceImpl implements AggregateService {
     }
 
     Set<String> parseObjectNameToAggregateMBeansWithMultipleIDs(String objectName,
-                                                                JMXServiceURL jmxServiceURL) {
+                                                                String jmxNode) {
         Set<String> objectNames = new TreeSet<String>();
         objectNames.add(objectName);
 
-        String string = objectName.toString();
         String idMatchRegex = ".*?" + ID_REPLACE_REGEX;
 
-        if (string.matches(idMatchRegex)) {
+        if (objectName.matches(idMatchRegex)) {
             String objectNamePrefix = objectName.replaceFirst(ID_REPLACE_REGEX,
                                                               "");
-            objectNames = _jmxService.getObjectNamesByPrefix(jmxServiceURL,
-                                                             objectNamePrefix);
+            try {
+                objectNames = _jmxService.getObjectNamesByPrefix(jmxNode,
+                                                                 objectNamePrefix);
+            } catch (MalformedObjectNameException | NullPointerException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
         return objectNames;
+    }
+
+    @Override
+    public Collection<String> getNodesToAggregate(String nodes) {
+        if (nodes != null) {
+            List<String> nodeList = Arrays.asList(nodes.split(","));
+            Collection<String> nodesToCollect = new HashSet<String>();
+            for (String jmxNode : mBeanServerNodes) {
+                if (nodeList.contains(jmxNode)) {
+                    nodesToCollect.add(jmxNode);
+                }
+            }
+            return nodesToCollect;
+        }
+        return mBeanServerNodes;
     }
 }

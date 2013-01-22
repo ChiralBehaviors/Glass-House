@@ -13,7 +13,7 @@
 
 package com.hellblazer.jmx.rest.web;
 
-import java.util.Set;
+import java.util.Collection;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -22,12 +22,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import com.hellblazer.jmx.rest.domain.jaxb.NodeJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.NodesJaxBean;
-
-/* ------------------------------------------------------------ */
-/**
- */
+ 
 @Path("jmx/nodes")
 public class Nodes extends BaseAggregateWebController {
     @Context
@@ -36,7 +32,7 @@ public class Nodes extends BaseAggregateWebController {
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public NodesJaxBean getObjectNames() {
-        Set<NodeJaxBean> nodes = aggregateService.getNodes();
+        Collection<String> nodes = aggregateService.getNodes();
         return new NodesJaxBean(nodes);
     }
 

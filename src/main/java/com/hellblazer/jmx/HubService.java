@@ -76,7 +76,7 @@ public class HubService extends Service<HubConfiguration> {
 		CascadingService cascadingService = new CascadingService();
 		mbs.registerMBean(cascadingService, new ObjectName(configuration.name));
 		hub = new Hub(cascadingService, configuration.sourcePattern,
-				configuration.sourceMap, scope, configuration.targetPath);
+				configuration.sourceMap, scope, configuration.nodeNamePattern);
 		for (String serviceType : configuration.serviceNames) {
 			hub.listenFor("(" + SERVICE_TYPE + "=" + serviceType + ")");
 		}
