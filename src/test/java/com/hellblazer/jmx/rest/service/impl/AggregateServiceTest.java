@@ -47,7 +47,6 @@ public class AggregateServiceTest extends AbstractMockitoTest {
     private static final String NODE1                            = "localhost:8888";
     private static final String NODE2                            = "localhost:9999";
     private static final String NODE3                            = "localhost:7777";
-    private static final String JETTY_VERSION                    = "7.3.0-SNAPSHOT";
 
     @Mock
     JMXService                  _jmxService;
@@ -93,7 +92,7 @@ public class AggregateServiceTest extends AbstractMockitoTest {
     public void setUp() throws Exception {
         _jmxNodes = new HashSet<String>();
         _jmxNodes.add(NODE1);
-        _jmxNodes.add(NODE1);
+        _jmxNodes.add(NODE2);
         _jmxNodes.add(NODE3);
 
         String[] names = new String[] { "init", "committed", "max", "used" };
@@ -280,28 +279,6 @@ public class AggregateServiceTest extends AbstractMockitoTest {
                                                                                                            "someAttributeName");
         assertEquals(_jmxNodes.size() * _jettyServerObjectNames.size(),
                      mBeanAttributeValuesJaxBean.mBeanAttributeValueJaxBeans.size());
-    }
-
-    @Test
-    public void testGetNodes() throws Exception {
-        int threadCount = 20;
-        int peakThreadCount = 30;
-
-        setExpectationsForJmxServiceGetMemoryAttribute();
-        when(
-             _jmxService.getAttribute(any(String.class),
-                                      eq(JMXServiceImpl.JETTY_SERVER_MBEAN),
-                                      eq("version"))).thenReturn(JETTY_VERSION);
-        when(
-             _jmxService.getAttribute(any(String.class),
-                                      eq(JMXServiceImpl.THREADING_MXBEAN),
-                                      eq("ThreadCount"))).thenReturn(threadCount);
-        when(
-             _jmxService.getAttribute(any(String.class),
-                                      eq(JMXServiceImpl.THREADING_MXBEAN),
-                                      eq("PeakThreadCount"))).thenReturn(peakThreadCount);
-        Collection<String> nodes = _aggregateServiceImpl.getNodes();
-        assertEquals("Expected 3 nodes", 3, nodes.size());
     }
 
     @Test
