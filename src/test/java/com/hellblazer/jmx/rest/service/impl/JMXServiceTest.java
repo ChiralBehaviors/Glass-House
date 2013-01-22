@@ -16,118 +16,126 @@ package com.hellblazer.jmx.rest.service.impl;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.net.MalformedURLException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
-import javax.management.InstanceNotFoundException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanOperationInfo;
 import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
+import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
-import javax.management.openmbean.CompositeDataSupport;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
-import javax.servlet.Servlet;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.bio.SocketConnector;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.jmx.rest.service.JMXService;
-import com.hellblazer.jmx.rest.util.Address;
-import com.hellblazer.jmx.rest.util.JMXServiceURLUtils;
-import com.hellblazer.jmx.rest.util.RandomIntRangeGenerator;
 
 public class JMXServiceTest {
 
-    private MBeanServer   mBeanServer;
-    private Server        server;
-    private JMXService    service       = JMXServiceImpl.getInstance();
-    private static int    port          = RandomIntRangeGenerator.getRandomInt(1024,
-                                                                               65535);
-    private Address       address       = new Address("127.0.0.1", port);
+    private static final String       NODE_NAME = "foo|bar";
 
-    private JMXServiceURL jmxServiceURL = JMXServiceURLUtils.getJMXServiceURL(address);
+    private static MBeanServer        mBeanServer;
+    private static JMXService         service;
+    private static CascadingService   cascadingService;
+    private static JMXConnectorServer server;
 
-    @Before
-    public void setUp() throws Exception {
-        server = new Server();
-        mBeanServer = ManagementFactory.getPlatformMBeanServer();
-        server.addConnector(new SocketConnector());
-        ServletContextHandler context = new ServletContextHandler(server, "/");
-
-        ServletHandler servletHandler = context.getServletHandler();
-        createServlets(servletHandler);
-
+    @BeforeClass
+    public static void setUp() throws Exception {
+        mBeanServer = MBeanServerFactory.newMBeanServer();
+        service = new JMXServiceImpl(mBeanServer);
+        cascadingService = new CascadingService(mBeanServer);
+        InetSocketAddress jmxEndpoint = new InetSocketAddress("localhost",
+                                                              allocatePort());
+        server = contruct(jmxEndpoint,
+                          ManagementFactory.getPlatformMBeanServer());
         server.start();
+        cascadingService.mount(server.getAddress().toString(), "*:*", NODE_NAME);
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterClass
+    public static void tearDown() throws Exception {
         server.stop();
-        server.join();
     }
 
-    // @Test
-    public void testGetMBeanAttributeInfo() throws InstanceNotFoundException {
-        MBeanAttributeInfo[] attributes = service.getAttributes(jmxServiceURL,
+    private static int allocatePort() {
+        InetSocketAddress address = new InetSocketAddress("localhost", 0);
+        ServerSocket socket = null;
+        try {
+            socket = new ServerSocket();
+            socket.bind(address);
+            return socket.getLocalPort();
+        } catch (IOException e) {
+        } finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return -1;
+    }
+
+    private static JMXConnectorServer contruct(InetSocketAddress jmxEndpoint,
+                                               MBeanServer mbs)
+                                                               throws IOException {
+        System.setProperty("java.rmi.server.randomIDs", "true");
+
+        Map<String, Object> env = new HashMap<String, Object>();
+        JMXServiceURL url = new JMXServiceURL("rmi", jmxEndpoint.getHostName(),
+                                              jmxEndpoint.getPort());
+        return JMXConnectorServerFactory.newJMXConnectorServer(url, env, mbs);
+    }
+
+    @Test
+    public void testGetMBeanAttributeInfo() throws Exception {
+        MBeanAttributeInfo[] attributes = service.getAttributes(NODE_NAME,
                                                                 "foo");
         assertTrue(attributes.length > 1);
     }
 
-    // @Test
-    public void testGetMBeanOperationInfo()
-                                           throws MalformedObjectNameException,
-                                           NullPointerException,
-                                           InstanceNotFoundException {
-        MBeanOperationInfo[] mBeanOperationInfos = service.getOperations(jmxServiceURL,
-                                                                         JETTY_SERVER_MBEAN_NAME);
+    @Test
+    public void testGetMBeanOperationInfo() throws Exception {
+        MBeanOperationInfo[] mBeanOperationInfos = service.getOperations(NODE_NAME,
+                                                                         AggregateServiceTest.JETTY_SERVER_MBEAN);
         assertTrue(mBeanOperationInfos.length > 1);
     }
 
-    // @Test
-    public void testGetObjectNames() {
-        Set<ObjectName> objectNames = service.getObjectNames(jmxServiceURL);
+    @Test
+    public void testGetObjectNames() throws Exception {
+        Set<ObjectName> objectNames = service.getObjectNames(NODE_NAME);
         assertTrue("At least one ObjectName should be returned",
                    objectNames.size() > 0);
     }
 
-    // @Test
-    public void testGetObjectNamesByPrefix() {
+    @Test
+    public void testGetObjectNamesByPrefix() throws Exception {
         String prefix = "org.eclipse.jetty.servlet:type=servletmapping";
-        Set<String> objectNames = service.getObjectNamesByPrefix(jmxServiceURL,
+        Set<String> objectNames = service.getObjectNamesByPrefix(NODE_NAME,
                                                                  prefix);
         assertEquals("Two servlet objectNames starting with \"" + prefix
                      + "\" expected.", 2, objectNames.size());
     }
 
     @Test
-    public void testInvokeOperationWithMultipleParameter() {
+    public void testInvokeOperationWithMultipleParameter() throws Exception {
         String[] params = new String[] { "javax.management.remote.rmi",
                 "FINEST" };
 
         String[] signature = new String[] { String.class.getName(),
                 String.class.getName() };
 
-        service.invoke(jmxServiceURL, "java.util.logging:type=Logging",
+        service.invoke(NODE_NAME, "java.util.logging:type=Logging",
                        "setLoggerLevel", params, signature);
-    }
-
-    private ServletHandler createServlets(ServletHandler servletHandler) {
-        Servlet servlet = new DefaultServlet();
-        ServletHolder servletHolder = new ServletHolder(servlet);
-        servletHandler.addServletWithMapping(servletHolder, "/");
-        servletHandler.addServletWithMapping(servletHolder, "/anotherPath/");
-        return servletHandler;
     }
 }

@@ -24,12 +24,21 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
-import com.hellblazer.jmx.rest.web.BaseAggregateWebController;
+import com.hellblazer.jmx.rest.service.AggregateService;
 
 @Path("jmx/mbeans")
-public class MBeans extends BaseAggregateWebController {
+public class MBeans {
+    /**
+     * @param aggregateService
+     */
+    public MBeans(AggregateService aggregateService) {
+        this.aggregateService = aggregateService;
+    }
+
+    private final AggregateService aggregateService;
+
     @Context
-    UriInfo uriInfo;
+    UriInfo                        uriInfo;
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })

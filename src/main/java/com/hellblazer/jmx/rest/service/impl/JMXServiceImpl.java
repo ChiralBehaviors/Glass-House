@@ -37,29 +37,14 @@ import com.hellblazer.jmx.rest.service.JMXService;
 public class JMXServiceImpl implements JMXService {
     private static final Logger log                                       = LoggerFactory.getLogger(JMXServiceImpl.class);
 
-    public static final String  MEMORY_MXBEAN                             = "java.lang:type=Memory";
-    public static final String  THREADING_MXBEAN                          = "java.lang:type=Threading";
-    public static final String  LOGGING_MBEAN                             = "java.util.logging:type=logging";
-    public static final String  JETTY_SERVER_MBEAN                        = "org.eclipse.jetty.server:type=server,id=0";
-    public static final String  JETTY_SERVER_MBEANID1                     = "org.eclipse.jetty.server:type=server,id=1";
-    public static final String  MEMORY_MXBEAN_HEAP                        = "HeapMemoryUsage";
-    public static final String  MEMORY_MXBEAN_NONHEAP                     = "NonHeapMemoryUsage";
-    public static final String  MEMORY_MXBEAN_OBJECT_PENDING_FINALIZATION = "ObjectPendingFinalizationCount";
-    public static final String  MEMORY_MXBEAN_VERBOSE                     = "Verbose";
+    private final MBeanServer   mbeanServer;
 
-    private static JMXService   jmxService;
-
-    public static JMXService getInstance() {
-        if (jmxService == null) {
-            jmxService = new JMXServiceImpl();
-        }
-        return jmxService;
+    public JMXServiceImpl() {
+        this(MBeanServerFactory.createMBeanServer());
     }
 
-    private final MBeanServer mbeanServer;
-
-    private JMXServiceImpl() {
-        mbeanServer = MBeanServerFactory.createMBeanServer();
+    public JMXServiceImpl(MBeanServer mBeanServer) {
+        mbeanServer = mBeanServer;
     }
 
     public Object getAttribute(String jmxNode, String objectName,

@@ -25,13 +25,19 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBeans;
-import com.hellblazer.jmx.rest.web.BaseAggregateWebController;
+import com.hellblazer.jmx.rest.service.AggregateService;
 
 @Path("/mbeans/{objectName}/attributes/{attributeName}")
-public class MBeansObjectNameAttributesAttributeName extends
-        BaseAggregateWebController {
+public class MBeansObjectNameAttributesAttributeName {
+
+    public MBeansObjectNameAttributesAttributeName(AggregateService aggregateService) {
+        this.aggregateService = aggregateService;
+    }
+
+    private final AggregateService aggregateService;
+
     @Context
-    UriInfo uriInfo;
+    UriInfo                        uriInfo;
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })

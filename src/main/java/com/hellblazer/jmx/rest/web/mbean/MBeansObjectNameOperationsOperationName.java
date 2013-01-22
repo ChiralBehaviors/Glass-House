@@ -26,12 +26,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
-import com.hellblazer.jmx.rest.web.BaseAggregateWebController;
- 
+import com.hellblazer.jmx.rest.service.AggregateService;
+
 @Path("/mbeans/{objectName}/operations/{operationName}")
-public class MBeansObjectNameOperationsOperationName extends
-        BaseAggregateWebController {
-    private static Logger log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
+public class MBeansObjectNameOperationsOperationName {
+    public MBeansObjectNameOperationsOperationName(AggregateService aggregateService) {
+        this.aggregateService = aggregateService;
+    }
+
+    private static Logger          log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
+
+    private final AggregateService aggregateService;
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })

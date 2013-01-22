@@ -31,13 +31,20 @@ import org.slf4j.LoggerFactory;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
-import com.hellblazer.jmx.rest.web.BaseAggregateWebController;
+import com.hellblazer.jmx.rest.service.AggregateService;
 
 @Path("/mbeans/{objectName}")
-public class MBeansObjectName extends BaseAggregateWebController {
-    private static Logger log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
+public class MBeansObjectName {
+    private static Logger          log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
+    
+    private final AggregateService aggregateService;
+
+    public MBeansObjectName(AggregateService aggregateService) {
+        this.aggregateService = aggregateService;
+    }
+
     @Context
-    UriInfo               uriInfo;
+    UriInfo uriInfo;
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })

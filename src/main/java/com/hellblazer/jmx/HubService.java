@@ -26,9 +26,17 @@ import com.hellblazer.gossip.configuration.YamlHelper;
 import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.jmx.discovery.Hub;
 import com.hellblazer.jmx.rest.JmxHealthCheck;
+import com.hellblazer.jmx.rest.service.AggregateService;
+import com.hellblazer.jmx.rest.service.JMXService;
+import com.hellblazer.jmx.rest.service.impl.AggregateServiceImpl;
+import com.hellblazer.jmx.rest.service.impl.JMXServiceImpl;
 import com.hellblazer.jmx.rest.web.Index;
 import com.hellblazer.jmx.rest.web.Nodes;
 import com.hellblazer.jmx.rest.web.mbean.MBeans;
+import com.hellblazer.jmx.rest.web.mbean.MBeansObjectName;
+import com.hellblazer.jmx.rest.web.mbean.MBeansObjectNameAttributes;
+import com.hellblazer.jmx.rest.web.mbean.MBeansObjectNameAttributesAttributeName;
+import com.hellblazer.jmx.rest.web.mbean.MBeansObjectNameOperationsOperationName;
 import com.hellblazer.nexus.GossipScope;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -40,51 +48,57 @@ import com.yammer.dropwizard.config.Environment;
  */
 public class HubService extends Service<HubConfiguration> {
 
-	public static void main(String[] argv) throws Exception {
-		new HubService().run(argv);
-	}
+    public static void main(String[] argv) throws Exception {
+        new HubService().run(argv);
+    }
 
-	private Hub hub;
+    private Hub hub;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.yammer.dropwizard.Service#initialize(com.yammer.dropwizard.config
-	 * .Bootstrap)
-	 */
-	@Override
-	public void initialize(Bootstrap<HubConfiguration> bootstrap) {
-		bootstrap.getObjectMapperFactory().registerModule(
-				YamlHelper.getModule());
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.yammer.dropwizard.Service#initialize(com.yammer.dropwizard.config
+     * .Bootstrap)
+     */
+    @Override
+    public void initialize(Bootstrap<HubConfiguration> bootstrap) {
+        bootstrap.getObjectMapperFactory().registerModule(YamlHelper.getModule());
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.yammer.dropwizard.Service#run(com.yammer.dropwizard.config.Configuration
-	 * , com.yammer.dropwizard.config.Environment)
-	 */
-	@Override
-	public void run(HubConfiguration configuration, Environment environment)
-			throws Exception {
-		MBeanServer mbs = MBeanServerFactory
-				.createMBeanServer(configuration.domainName);
-		GossipScope scope = new GossipScope(configuration.gossip.construct());
-		scope.start();
-		CascadingService cascadingService = new CascadingService();
-		mbs.registerMBean(cascadingService, new ObjectName(configuration.name));
-		hub = new Hub(cascadingService, configuration.sourcePattern,
-				configuration.sourceMap, scope, configuration.nodeNamePattern);
-		for (String serviceType : configuration.serviceNames) {
-			hub.listenFor("(" + SERVICE_TYPE + "=" + serviceType + ")");
-		}
-		environment.addHealthCheck(new JmxHealthCheck());
-		// environment.addResource(new MBeanResource(mbs));
-		environment.addResource(new MBeans());
-		environment.addResource(new Index());
-		environment.addResource(new Nodes());
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.yammer.dropwizard.Service#run(com.yammer.dropwizard.config.Configuration
+     * , com.yammer.dropwizard.config.Environment)
+     */
+    @Override
+    public void run(HubConfiguration configuration, Environment environment)
+                                                                            throws Exception {
+        MBeanServer mbs = MBeanServerFactory.createMBeanServer(configuration.domainName);
+        GossipScope scope = new GossipScope(configuration.gossip.construct());
+        scope.start();
+        CascadingService cascadingService = new CascadingService();
+        mbs.registerMBean(cascadingService, new ObjectName(configuration.name));
+        hub = new Hub(cascadingService, configuration.sourcePattern,
+                      configuration.sourceMap, scope,
+                      configuration.nodeNamePattern);
+        for (String serviceType : configuration.serviceNames) {
+            hub.listenFor("(" + SERVICE_TYPE + "=" + serviceType + ")");
+        }
+        environment.addHealthCheck(new JmxHealthCheck());
+        JMXService jmxService = new JMXServiceImpl(mbs);
+        AggregateService aggregateService = new AggregateServiceImpl(jmxService);
+        environment.addResource(new MBeans(aggregateService));
+        environment.addResource(new MBeansObjectName(aggregateService));
+        environment.addResource(new MBeansObjectNameAttributes(aggregateService));
+        environment.addResource(new MBeansObjectNameAttributesAttributeName(
+                                                                            aggregateService));
+        environment.addResource(new MBeansObjectNameOperationsOperationName(
+                                                                            aggregateService));
+        environment.addResource(new Index());
+        environment.addResource(new Nodes(aggregateService));
+    }
 
 }

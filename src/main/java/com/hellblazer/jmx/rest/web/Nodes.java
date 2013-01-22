@@ -23,11 +23,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
 import com.hellblazer.jmx.rest.domain.jaxb.NodesJaxBean;
- 
+import com.hellblazer.jmx.rest.service.AggregateService;
+
 @Path("jmx/nodes")
-public class Nodes extends BaseAggregateWebController {
+public class Nodes {
+    /**
+     * @param aggregateService
+     */
+    public Nodes(AggregateService aggregateService) {
+        this.aggregateService = aggregateService;
+    }
+
+    private final AggregateService aggregateService;
     @Context
-    UriInfo uriInfo;
+    UriInfo                        uriInfo;
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
