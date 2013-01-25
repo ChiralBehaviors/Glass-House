@@ -35,7 +35,7 @@ import com.hellblazer.jmx.cascading.CascadingAgent;
 import com.hellblazer.jmx.rest.service.JMXService;
 
 public class JMXServiceImpl implements JMXService {
-    private static final Logger log                                       = LoggerFactory.getLogger(JMXServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(JMXServiceImpl.class);
 
     private final MBeanServer   mbeanServer;
 
@@ -69,7 +69,7 @@ public class JMXServiceImpl implements JMXService {
     public Set<ObjectName> getObjectNames(String jmxNode)
                                                          throws MalformedObjectNameException,
                                                          NullPointerException {
-        ObjectName targetQuery = ObjectName.getInstance(String.format("*:%s=%s",
+        ObjectName targetQuery = ObjectName.getInstance(String.format("*:%s=%s,*",
                                                                       CascadingAgent.CASCADED_NODE_PROPERTY_NAME,
                                                                       jmxNode));
         return mbeanServer.queryNames(targetQuery, null);
@@ -78,6 +78,7 @@ public class JMXServiceImpl implements JMXService {
     public Set<String> getObjectNamesByPrefix(String jmxNode, String prefix)
                                                                             throws MalformedObjectNameException,
                                                                             NullPointerException {
+        prefix = inject(jmxNode, prefix).getCanonicalName();
         Set<ObjectName> objectNames = getObjectNames(jmxNode);
         Set<String> filteredObjectNames = new HashSet<String>();
         for (ObjectName objectName : objectNames) {
@@ -104,8 +105,10 @@ public class JMXServiceImpl implements JMXService {
                                             InstanceNotFoundException,
                                             ReflectionException, MBeanException {
         ObjectName targetName = inject(jmxNode, objectName);
-        log.debug(String.format("invoke: target objectName: %s, operationName: %s",
-                                targetName, operationName));
+        if (log.isDebugEnabled()) {
+            log.debug(String.format("invoke: target objectName: %s, operationName: %s",
+                                    targetName, operationName));
+        }
         return mbeanServer.invoke(targetName, operationName, params, signature);
 
     }

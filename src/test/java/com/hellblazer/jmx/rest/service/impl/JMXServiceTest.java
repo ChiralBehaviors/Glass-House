@@ -14,6 +14,7 @@
 package com.hellblazer.jmx.rest.service.impl;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
 import java.io.IOException;
@@ -21,6 +22,7 @@ import java.lang.management.ManagementFactory;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -100,15 +102,26 @@ public class JMXServiceTest {
     @Test
     public void testGetMBeanAttributeInfo() throws Exception {
         MBeanAttributeInfo[] attributes = service.getAttributes(NODE_NAME,
-                                                                "foo");
-        assertTrue(attributes.length > 1);
+                                                                AggregateServiceTest.MEMORY_MXBEAN);
+        assertEquals(5, attributes.length);
+        Set<String> names = new HashSet<String>();
+        for (MBeanAttributeInfo attribute : attributes) {
+            names.add(attribute.getName());
+        }
+        assertTrue(names.contains("ObjectPendingFinalizationCount"));
+        assertTrue(names.contains("HeapMemoryUsage"));
+        assertTrue(names.contains("NonHeapMemoryUsage"));
+        assertTrue(names.contains("Verbose"));
+        assertTrue(names.contains("ObjectName"));
     }
 
     @Test
     public void testGetMBeanOperationInfo() throws Exception {
         MBeanOperationInfo[] mBeanOperationInfos = service.getOperations(NODE_NAME,
-                                                                         AggregateServiceTest.JETTY_SERVER_MBEAN);
-        assertTrue(mBeanOperationInfos.length > 1);
+                                                                         AggregateServiceTest.MEMORY_MXBEAN);
+        assertNotNull(mBeanOperationInfos);
+        assertEquals(1, mBeanOperationInfos.length);
+        assertEquals("gc", mBeanOperationInfos[0].getName());
     }
 
     @Test
@@ -120,22 +133,20 @@ public class JMXServiceTest {
 
     @Test
     public void testGetObjectNamesByPrefix() throws Exception {
-        String prefix = "org.eclipse.jetty.servlet:type=servletmapping";
+        String prefix = "java.lang:type=MemoryPool";
         Set<String> objectNames = service.getObjectNamesByPrefix(NODE_NAME,
                                                                  prefix);
-        assertEquals("Two servlet objectNames starting with \"" + prefix
-                     + "\" expected.", 2, objectNames.size());
+        assertEquals(String.format("5 MBeans starting with \"%s\" expected",
+                                   prefix), 5, objectNames.size());
     }
 
     @Test
-    public void testInvokeOperationWithMultipleParameter() throws Exception {
-        String[] params = new String[] { "javax.management.remote.rmi",
-                "FINEST" };
+    public void testInvokeOperation() throws Exception {
+        String[] params = new String[] {};
 
-        String[] signature = new String[] { String.class.getName(),
-                String.class.getName() };
+        String[] signature = new String[] {};
 
-        service.invoke(NODE_NAME, "java.util.logging:type=Logging",
-                       "setLoggerLevel", params, signature);
+        service.invoke(NODE_NAME, AggregateServiceTest.MEMORY_MXBEAN, "gc",
+                       params, signature);
     }
 }
