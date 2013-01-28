@@ -1,10 +1,12 @@
 package com.hellblazer.jmx.rest.service.impl;
 
+import static com.hellblazer.jmx.cascading.proxy.ProxyCascadingAgent.getTargetName;
+import static com.hellblazer.jmx.rest.service.impl.AggregateServiceImpl.getNodeWildcardName;
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,11 +19,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.management.InstanceNotFoundException;
 import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanInfo;
 import javax.management.MBeanOperationInfo;
+import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.QueryExp;
 import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.OpenType;
@@ -31,7 +35,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import com.hellblazer.jmx.rest.AbstractMockitoTest;
@@ -41,35 +44,31 @@ import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.jmx.rest.service.AggregateService;
-import com.hellblazer.jmx.rest.service.JMXService;
 
 public class AggregateServiceTest extends AbstractMockitoTest {
 
     public static final String  MEMORY_MXBEAN                             = "java.lang:type=Memory";
     public static final String  THREADING_MXBEAN                          = "java.lang:type=Threading";
     public static final String  LOGGING_MBEAN                             = "java.util.logging:type=logging";
-    public static final String  JETTY_SERVER_MBEAN                        = "org.eclipse.jetty.server:type=server,id=0";
-    public static final String  JETTY_SERVER_MBEANID1                     = "org.eclipse.jetty.server:type=server,id=1";
+    public static final String  JETTY_SERVER_MBEAN                        = "org.eclipse.jetty.server:type=server";
     public static final String  MEMORY_MXBEAN_HEAP                        = "HeapMemoryUsage";
     public static final String  MEMORY_MXBEAN_NONHEAP                     = "NonHeapMemoryUsage";
     public static final String  MEMORY_MXBEAN_OBJECT_PENDING_FINALIZATION = "ObjectPendingFinalizationCount";
     public static final String  MEMORY_MXBEAN_VERBOSE                     = "Verbose";
 
-    private static final String NODE1                                     = "localhost:8888";
-    private static final String NODE2                                     = "localhost:9999";
-    private static final String NODE3                                     = "localhost:7777";
+    private static final String NODE1                                     = "localhost|8888";
+    private static final String NODE2                                     = "localhost|9999";
+    private static final String NODE3                                     = "localhost|7777";
 
     @Mock
-    JMXService                  _jmxService;
+    MBeanServer                 mbs;
     @Mock
     UriInfo                     _uriInfo;
     @Mock
     UriBuilder                  _uriBuilder;
 
-    // class under test
-    @InjectMocks
-    AggregateService            _aggregateServiceImpl                     = new AggregateServiceImpl(
-                                                                                                     _jmxService);
+    // class under test 
+    AggregateService            _aggregateServiceImpl;
 
     // test data
     Collection<String>          _jmxNodes;
@@ -97,10 +96,11 @@ public class AggregateServiceTest extends AbstractMockitoTest {
     int                         _objectsPendingFinalizationNode3          = 1;
     private String              _jettyServerBeanPrefix                    = JETTY_SERVER_MBEAN.replaceFirst(AggregateServiceImpl.ID_REPLACE_REGEX,
                                                                                                             "");
-    private Set<String>         _jettyServerObjectNames                   = new TreeSet<String>();
+    private Set<ObjectName>     _jettyServerObjectNames                   = new TreeSet<ObjectName>();
 
     @Before
     public void setUp() throws Exception {
+        _aggregateServiceImpl = new AggregateServiceImpl(mbs);
         _jmxNodes = new HashSet<String>();
         _jmxNodes.add(NODE1);
         _jmxNodes.add(NODE2);
@@ -141,41 +141,31 @@ public class AggregateServiceTest extends AbstractMockitoTest {
                                                                                    234L));
         _compositeDataNonHeapNode3 = _compositeDataNonHeapNode2;
 
-        _jettyServerObjectNames.add(JETTY_SERVER_MBEAN);
-        _jettyServerObjectNames.add(JETTY_SERVER_MBEANID1);
+        _jettyServerObjectNames.add(ObjectName.getInstance(JETTY_SERVER_MBEAN));
     }
 
     @Test
     public void testGetAllAttributeValues() throws Exception {
         setExpectationsForJmxServiceGetAttributes();
         setExpectationsForJmxServiceGetMemoryAttribute();
+        ObjectName node1MemoryBean = getTargetName(NODE1, MEMORY_MXBEAN);
+        ObjectName node2MemoryBean = getTargetName(NODE2, MEMORY_MXBEAN);
+        ObjectName node3MemoryBean = getTargetName(NODE3, MEMORY_MXBEAN);
+        when(mbs.getAttribute(node1MemoryBean, MEMORY_MXBEAN_NONHEAP)).thenReturn(_compositeDataNonHeapNode1);
+        when(mbs.getAttribute(node2MemoryBean, MEMORY_MXBEAN_NONHEAP)).thenReturn(_compositeDataNonHeapNode2);
+        when(mbs.getAttribute(node3MemoryBean, MEMORY_MXBEAN_NONHEAP)).thenReturn(_compositeDataNonHeapNode3);
         when(
-             _jmxService.getAttribute(NODE1, MEMORY_MXBEAN,
-                                      MEMORY_MXBEAN_NONHEAP)).thenReturn(_compositeDataNonHeapNode1);
+             mbs.getAttribute(node1MemoryBean,
+                              MEMORY_MXBEAN_OBJECT_PENDING_FINALIZATION)).thenReturn(_objectsPendingFinalizationNode1);
         when(
-             _jmxService.getAttribute(NODE2, MEMORY_MXBEAN,
-                                      MEMORY_MXBEAN_NONHEAP)).thenReturn(_compositeDataNonHeapNode2);
+             mbs.getAttribute(node2MemoryBean,
+                              MEMORY_MXBEAN_OBJECT_PENDING_FINALIZATION)).thenReturn(_objectsPendingFinalizationNode2);
         when(
-             _jmxService.getAttribute(NODE3, MEMORY_MXBEAN,
-                                      MEMORY_MXBEAN_NONHEAP)).thenReturn(_compositeDataNonHeapNode3);
-        when(
-             _jmxService.getAttribute(NODE1, MEMORY_MXBEAN,
-                                      MEMORY_MXBEAN_OBJECT_PENDING_FINALIZATION)).thenReturn(_objectsPendingFinalizationNode1);
-        when(
-             _jmxService.getAttribute(NODE2, MEMORY_MXBEAN,
-                                      MEMORY_MXBEAN_OBJECT_PENDING_FINALIZATION)).thenReturn(_objectsPendingFinalizationNode2);
-        when(
-             _jmxService.getAttribute(NODE3, MEMORY_MXBEAN,
-                                      MEMORY_MXBEAN_OBJECT_PENDING_FINALIZATION)).thenReturn(_objectsPendingFinalizationNode3);
-        when(
-             _jmxService.getAttribute(NODE1, MEMORY_MXBEAN,
-                                      MEMORY_MXBEAN_VERBOSE)).thenReturn(_objectsPendingFinalizationNode1);
-        when(
-             _jmxService.getAttribute(NODE2, MEMORY_MXBEAN,
-                                      MEMORY_MXBEAN_VERBOSE)).thenReturn(_objectsPendingFinalizationNode2);
-        when(
-             _jmxService.getAttribute(NODE3, MEMORY_MXBEAN,
-                                      MEMORY_MXBEAN_VERBOSE)).thenReturn(_objectsPendingFinalizationNode3);
+             mbs.getAttribute(node3MemoryBean,
+                              MEMORY_MXBEAN_OBJECT_PENDING_FINALIZATION)).thenReturn(_objectsPendingFinalizationNode3);
+        when(mbs.getAttribute(node1MemoryBean, MEMORY_MXBEAN_VERBOSE)).thenReturn(_objectsPendingFinalizationNode1);
+        when(mbs.getAttribute(node2MemoryBean, MEMORY_MXBEAN_VERBOSE)).thenReturn(_objectsPendingFinalizationNode2);
+        when(mbs.getAttribute(node3MemoryBean, MEMORY_MXBEAN_VERBOSE)).thenReturn(_objectsPendingFinalizationNode3);
 
         MBeanAttributeValueJaxBeans attributes = _aggregateServiceImpl.getAllAttributeValues(_jmxNodes,
                                                                                              MEMORY_MXBEAN);
@@ -199,7 +189,7 @@ public class AggregateServiceTest extends AbstractMockitoTest {
     public void testGetAttributesMetaDataWithBeanAvailableOnlyOnOneOfTwoNodes()
                                                                                throws Exception {
         setExpectationsForJmxServiceGetAttributes();
-        when(_jmxService.getAttributes(NODE2, MEMORY_MXBEAN)).thenReturn(null);
+        when(mbs.getAttributes(getTargetName(NODE2, MEMORY_MXBEAN), null)).thenReturn(null);
 
         MBeanAttributeJaxBeans mBeanAttributesInfoJaxBean = _aggregateServiceImpl.getAttributesMetaData(_uriInfo,
                                                                                                         _jmxNodes,
@@ -214,7 +204,7 @@ public class AggregateServiceTest extends AbstractMockitoTest {
     public void testGetAttributesMetaDataWithMissingAttributeOnOneNode()
                                                                         throws Exception {
         setExpectationsForGetAttributesMetaDataTests();
-        when(_jmxService.getAttributes(eq(NODE1), eq(JETTY_SERVER_MBEAN))).thenReturn(null);
+        when(mbs.getAttributes(getTargetName(NODE1, JETTY_SERVER_MBEAN), null)).thenReturn(null);
         MBeanAttributeJaxBeans mBeanAttributesInfoJaxBean = _aggregateServiceImpl.getAttributesMetaData(_uriInfo,
                                                                                                         _jmxNodes,
                                                                                                         JETTY_SERVER_MBEAN);
@@ -224,25 +214,12 @@ public class AggregateServiceTest extends AbstractMockitoTest {
     }
 
     @Test
-    public void testGetAttributesMetaDataWithMissingIdInObjectName()
-                                                                    throws Exception {
-        setExpectationsForGetAttributesMetaDataTests();
-        when(
-             _jmxService.getAttributes(any(String.class),
-                                       eq(_jettyServerBeanPrefix))).thenThrow(new InstanceNotFoundException());
-        MBeanAttributeJaxBeans mBeanAttributesInfoJaxBean = _aggregateServiceImpl.getAttributesMetaData(_uriInfo,
-                                                                                                        _jmxNodes,
-                                                                                                        _jettyServerBeanPrefix);
-
-        assertEquals(1,
-                     mBeanAttributesInfoJaxBean.mBeanAttributeJaxBeans.size());
-    }
-
-    @Test
     public void testGetAttributesMetaDataWithSlightlyDifferentMetadataOnBothNodes()
                                                                                    throws Exception {
         setExpectationsForJmxServiceGetAttributes();
-        when(_jmxService.getAttributes(NODE2, MEMORY_MXBEAN)).thenReturn(prepareMBeanAttributeInfoArrayForMemoryMXBean(false));
+        MBeanInfo info = mock(MBeanInfo.class);
+        when(info.getAttributes()).thenReturn(prepareMBeanAttributeInfoArrayForMemoryMXBean(false));
+        when(mbs.getMBeanInfo(getTargetName(NODE2, MEMORY_MXBEAN))).thenReturn(info);
 
         MBeanAttributeJaxBeans mBeanAttributesInfoJaxBean = _aggregateServiceImpl.getAttributesMetaData(_uriInfo,
                                                                                                         _jmxNodes,
@@ -269,25 +246,6 @@ public class AggregateServiceTest extends AbstractMockitoTest {
     }
 
     @Test
-    public void testGetAttributeValuesForJettyServerMBeanWithMultipleIds()
-                                                                          throws Exception {
-        setExpectationsForGetObjectNamesByPrefix();
-        when(
-             _jmxService.getAttribute(any(String.class),
-                                      eq(JETTY_SERVER_MBEAN),
-                                      eq("someAttributeName"))).thenReturn("someValue");
-        when(
-             _jmxService.getAttribute(any(String.class),
-                                      eq(JETTY_SERVER_MBEANID1),
-                                      eq("someAttributeName"))).thenReturn("someOtherValue");
-        MBeanAttributeValueJaxBeans mBeanAttributeValuesJaxBean = _aggregateServiceImpl.getAttributeValues(_jmxNodes,
-                                                                                                           JETTY_SERVER_MBEAN,
-                                                                                                           "someAttributeName");
-        assertEquals(_jmxNodes.size() * _jettyServerObjectNames.size(),
-                     mBeanAttributeValuesJaxBean.mBeanAttributeValueJaxBeans.size());
-    }
-
-    @Test
     public void testGetObjectNames() throws Exception {
         ObjectName aThirdCommonObjectName = new ObjectName(JETTY_SERVER_MBEAN);
         Set<ObjectName> commonObjectNames = getCommonObjectNameSet();
@@ -296,7 +254,7 @@ public class AggregateServiceTest extends AbstractMockitoTest {
         addThirdNodeToLocalCloudtide();
 
         setCommonExpectationsForGetObjectNameTests(commonObjectNames);
-        when(_jmxService.getObjectNames(NODE2)).thenReturn(commonObjectNames);
+        when(mbs.queryNames(getNodeWildcardName(NODE3), null)).thenReturn(commonObjectNames);
 
         MBeanShortJaxBeans mBeanShortJaxBeans = _aggregateServiceImpl.getMBeanShortJaxBeans(_uriInfo,
                                                                                             _jmxNodes);
@@ -318,7 +276,7 @@ public class AggregateServiceTest extends AbstractMockitoTest {
         addThirdNodeToLocalCloudtide();
 
         setCommonExpectationsForGetObjectNameTests(commonObjectNames);
-        when(_jmxService.getObjectNames(NODE2)).thenReturn(commonObjectNamesPlusThreading);
+        when(mbs.queryNames(any(ObjectName.class), any(QueryExp.class))).thenReturn(commonObjectNamesPlusThreading);
 
         MBeanShortJaxBeans mBeanShortJaxBeans = _aggregateServiceImpl.getMBeanShortJaxBeans(_uriInfo,
                                                                                             _jmxNodes);
@@ -331,8 +289,10 @@ public class AggregateServiceTest extends AbstractMockitoTest {
     public void testGetOperationsMetaData() throws Exception {
         setDefaultGetOperationsExpectations();
 
-        when(_jmxService.getOperations(NODE3, MEMORY_MXBEAN)).thenReturn(prepareMBeanOperationInfoArray("operation1",
-                                                                                                        "desc 1"));
+        MBeanInfo info = mock(MBeanInfo.class);
+        when(info.getOperations()).thenReturn(prepareMBeanOperationInfoArray("operation1",
+                                                                             "desc 1"));
+        when(mbs.getMBeanInfo(getTargetName(NODE3, MEMORY_MXBEAN))).thenReturn(info);
 
         MBeanOperationJaxBeans mBeanOperationsInfoJaxBean = _aggregateServiceImpl.getOperationsMetaData(_uriInfo,
                                                                                                         _jmxNodes,
@@ -344,45 +304,25 @@ public class AggregateServiceTest extends AbstractMockitoTest {
 
     @Test
     public void testGetOperationsMetaDataForServerBean() throws Exception {
+        Set<ObjectName> names = new HashSet<ObjectName>();
+        names.add(getTargetName(NODE1, JETTY_SERVER_MBEAN));
+        names.add(getTargetName(NODE2, JETTY_SERVER_MBEAN));
+        names.add(getTargetName(NODE3, JETTY_SERVER_MBEAN));
+        when(mbs.queryNames(any(ObjectName.class), any(QueryExp.class))).thenReturn(names);
+
         MBeanOperationInfo[] mBeanOperationInfos = prepareMBeanOperationInfoArray("operation1",
                                                                                   "desc 1");
         setUriInfoExpectations();
-        setExpectationsForGetObjectNamesByPrefix();
-        when(
-             _jmxService.getOperations(any(String.class),
-                                       eq(JETTY_SERVER_MBEAN))).thenReturn(mBeanOperationInfos);
-        when(
-             _jmxService.getOperations(any(String.class),
-                                       eq(JETTY_SERVER_MBEANID1))).thenReturn(null);
+        setExpectationsForGetObjectNames();
+        MBeanInfo info = mock(MBeanInfo.class);
+        when(info.getOperations()).thenReturn(mBeanOperationInfos);
+        when(mbs.getMBeanInfo(getTargetName(NODE1, JETTY_SERVER_MBEAN))).thenReturn(info);
+        when(mbs.getMBeanInfo(getTargetName(NODE2, JETTY_SERVER_MBEAN))).thenReturn(info);
+        when(mbs.getMBeanInfo(getTargetName(NODE3, JETTY_SERVER_MBEAN))).thenReturn(info);
 
         MBeanOperationJaxBeans mBeanOperationsInfoJaxBean = _aggregateServiceImpl.getOperationsMetaData(_uriInfo,
                                                                                                         _jmxNodes,
                                                                                                         JETTY_SERVER_MBEAN);
-
-        assertEquals(0,
-                     mBeanOperationsInfoJaxBean.mBeanOperationJaxBeans.size());
-    }
-
-    @Test
-    public void testGetOperationsMetaDataForServerBeanWithMissingId()
-                                                                     throws Exception {
-        MBeanOperationInfo[] mBeanOperationInfos = prepareMBeanOperationInfoArray("operation1",
-                                                                                  "desc 1");
-        setUriInfoExpectations();
-        setExpectationsForGetObjectNamesByPrefix();
-        when(
-             _jmxService.getOperations(any(String.class),
-                                       eq(_jettyServerBeanPrefix))).thenThrow(new InstanceNotFoundException());
-        when(
-             _jmxService.getOperations(any(String.class),
-                                       eq(JETTY_SERVER_MBEAN))).thenReturn(mBeanOperationInfos);
-        when(
-             _jmxService.getOperations(any(String.class),
-                                       eq(JETTY_SERVER_MBEANID1))).thenReturn(mBeanOperationInfos);
-
-        MBeanOperationJaxBeans mBeanOperationsInfoJaxBean = _aggregateServiceImpl.getOperationsMetaData(_uriInfo,
-                                                                                                        _jmxNodes,
-                                                                                                        _jettyServerBeanPrefix);
 
         assertEquals(1,
                      mBeanOperationsInfoJaxBean.mBeanOperationJaxBeans.size());
@@ -392,8 +332,10 @@ public class AggregateServiceTest extends AbstractMockitoTest {
     public void testGetOperationsMetaDataWithSlightlyDifferencesOnAThirdNode()
                                                                               throws Exception {
         setDefaultGetOperationsExpectations();
-        when(_jmxService.getOperations(NODE3, MEMORY_MXBEAN)).thenReturn(prepareMBeanOperationInfoArray("operation1",
-                                                                                                        "desc is different"));
+        MBeanInfo info = mock(MBeanInfo.class);
+        when(info.getOperations()).thenReturn(prepareMBeanOperationInfoArray("operation1",
+                                                                             "desc is different"));
+        when(mbs.getMBeanInfo(getTargetName(NODE3, MEMORY_MXBEAN))).thenReturn(info);
 
         MBeanOperationJaxBeans mBeanOperationsInfoJaxBean = _aggregateServiceImpl.getOperationsMetaData(_uriInfo,
                                                                                                         _jmxNodes,
@@ -405,15 +347,29 @@ public class AggregateServiceTest extends AbstractMockitoTest {
 
     @Test
     public void testInvokeOperation() throws Exception {
+        Set<ObjectName> names = new HashSet<ObjectName>();
+        names.add(getTargetName(NODE1, MEMORY_MXBEAN));
+        names.add(getTargetName(NODE2, MEMORY_MXBEAN));
+        names.add(getTargetName(NODE3, MEMORY_MXBEAN));
+        when(mbs.queryNames(any(ObjectName.class), any(QueryExp.class))).thenReturn(names);
         _aggregateServiceImpl.invokeOperation(_jmxNodes, MEMORY_MXBEAN, "gc");
-        verify(_jmxService, times(3)).invoke(any(String.class),
-                                             eq(MEMORY_MXBEAN), eq("gc"),
-                                             any(Object[].class),
-                                             any(String[].class));
+
+        verify(mbs).invoke(eq(getTargetName(NODE1, MEMORY_MXBEAN)), eq("gc"),
+                           aryEq(new Object[] {}), aryEq(new String[] {}));
+        verify(mbs).invoke(eq(getTargetName(NODE2, MEMORY_MXBEAN)), eq("gc"),
+                           aryEq(new Object[] {}), aryEq(new String[] {}));
+        verify(mbs).invoke(eq(getTargetName(NODE3, MEMORY_MXBEAN)), eq("gc"),
+                           aryEq(new Object[] {}), aryEq(new String[] {}));
     }
 
     @Test
     public void testInvokeOperationWithParameters() throws Exception {
+        Set<ObjectName> names = new HashSet<ObjectName>();
+        names.add(getTargetName(NODE1, LOGGING_MBEAN));
+        names.add(getTargetName(NODE2, LOGGING_MBEAN));
+        names.add(getTargetName(NODE3, LOGGING_MBEAN));
+        when(mbs.queryNames(any(ObjectName.class), any(QueryExp.class))).thenReturn(names);
+
         String stringSignature = "java.lang.String";
 
         Object[] params = new Object[] { "com.intalio", "FINEST" };
@@ -423,10 +379,16 @@ public class AggregateServiceTest extends AbstractMockitoTest {
         _aggregateServiceImpl.invokeOperation(_jmxNodes, LOGGING_MBEAN,
                                               "setLoggerLevel", params,
                                               signature);
-        verify(_jmxService, times(3)).invoke(any(String.class),
-                                             eq(LOGGING_MBEAN),
-                                             eq("setLoggerLevel"),
-                                             aryEq(params), aryEq(signature));
+
+        verify(mbs).invoke(eq(getTargetName(NODE1, LOGGING_MBEAN)),
+                           eq("setLoggerLevel"), aryEq(params),
+                           aryEq(signature));
+        verify(mbs).invoke(eq(getTargetName(NODE2, LOGGING_MBEAN)),
+                           eq("setLoggerLevel"), aryEq(params),
+                           aryEq(signature));
+        verify(mbs).invoke(eq(getTargetName(NODE3, LOGGING_MBEAN)),
+                           eq("setLoggerLevel"), aryEq(params),
+                           aryEq(signature));
     }
 
     private void addThirdNodeToLocalCloudtide() {
@@ -515,52 +477,76 @@ public class AggregateServiceTest extends AbstractMockitoTest {
     private void setCommonExpectationsForGetObjectNameTests(Set<ObjectName> commonObjectNames)
                                                                                               throws Exception {
         setUriInfoExpectations();
-        when(_jmxService.getObjectNames(NODE1)).thenReturn(commonObjectNames);
-        when(_jmxService.getObjectNames(NODE3)).thenReturn(commonObjectNames);
+        when(mbs.queryNames(getNodeWildcardName(NODE1), null)).thenReturn(commonObjectNames);
+        when(mbs.queryNames(getNodeWildcardName(NODE3), null)).thenReturn(commonObjectNames);
     }
 
     private void setDefaultGetOperationsExpectations() throws Exception {
+        Set<ObjectName> names = new HashSet<ObjectName>();
+        names.add(getTargetName(NODE1, MEMORY_MXBEAN));
+        names.add(getTargetName(NODE3, MEMORY_MXBEAN));
+        when(mbs.queryNames(any(ObjectName.class), any(QueryExp.class))).thenReturn(names);
         MBeanOperationInfo[] mBeanOperationInfos = prepareMBeanOperationInfoArray("operation1",
                                                                                   "desc 1");
+        MBeanInfo info = mock(MBeanInfo.class);
+        when(info.getOperations()).thenReturn(mBeanOperationInfos);
         addThirdNodeToLocalCloudtide();
 
         setUriInfoExpectations();
-        when(_jmxService.getOperations(NODE1, MEMORY_MXBEAN)).thenReturn(mBeanOperationInfos);
-        when(_jmxService.getOperations(NODE2, MEMORY_MXBEAN)).thenReturn(mBeanOperationInfos);
+        when(mbs.getMBeanInfo(getTargetName(NODE1, MEMORY_MXBEAN))).thenReturn(info);
 
     }
 
     private void setExpectationsForGetAttributesMetaDataTests()
                                                                throws Exception {
+        Set<ObjectName> names = new HashSet<ObjectName>();
+        names.add(getTargetName(NODE1, JETTY_SERVER_MBEAN));
+        names.add(getTargetName(NODE2, JETTY_SERVER_MBEAN));
+        names.add(getTargetName(NODE3, JETTY_SERVER_MBEAN));
+        when(mbs.queryNames(any(ObjectName.class), any(QueryExp.class))).thenReturn(names);
         MBeanAttributeInfo[] mBeanAttributeInfos = prepareMBeanAttributeInfoArrayForJettyServerMBean();
-        setExpectationsForGetObjectNamesByPrefix();
+        setExpectationsForGetObjectNames();
         setUriInfoExpectations();
-        when(
-             _jmxService.getAttributes(any(String.class),
-                                       eq(JETTY_SERVER_MBEAN))).thenReturn(mBeanAttributeInfos);
-        when(
-             _jmxService.getAttributes(any(String.class),
-                                       eq(JETTY_SERVER_MBEANID1))).thenReturn(mBeanAttributeInfos);
+        MBeanInfo info = mock(MBeanInfo.class);
+        when(info.getAttributes()).thenReturn(mBeanAttributeInfos);
+        when(mbs.getMBeanInfo(getTargetName(NODE1, JETTY_SERVER_MBEAN))).thenReturn(info);
+        when(mbs.getMBeanInfo(getTargetName(NODE2, JETTY_SERVER_MBEAN))).thenReturn(info);
+        when(mbs.getMBeanInfo(getTargetName(NODE3, JETTY_SERVER_MBEAN))).thenReturn(info);
     }
 
-    private void setExpectationsForGetObjectNamesByPrefix() throws Exception {
-        when(
-             _jmxService.getObjectNamesByPrefix(any(String.class),
-                                                eq(_jettyServerBeanPrefix))).thenReturn(_jettyServerObjectNames);
+    private void setExpectationsForGetObjectNames() throws Exception {
+        when(mbs.queryNames(getTargetName(NODE1, _jettyServerBeanPrefix), null)).thenReturn(_jettyServerObjectNames);
+        when(mbs.queryNames(getTargetName(NODE2, _jettyServerBeanPrefix), null)).thenReturn(_jettyServerObjectNames);
+        when(mbs.queryNames(getTargetName(NODE3, _jettyServerBeanPrefix), null)).thenReturn(_jettyServerObjectNames);
     }
 
     private void setExpectationsForJmxServiceGetAttributes() throws Exception {
         MBeanAttributeInfo[] mBeanAttributeInfos = prepareMBeanAttributeInfoArrayForMemoryMXBean(true);
 
+        MBeanInfo info = mock(MBeanInfo.class);
+        when(info.getAttributes()).thenReturn(mBeanAttributeInfos);
         setUriInfoExpectations();
-        when(_jmxService.getAttributes(any(String.class), eq(MEMORY_MXBEAN))).thenReturn(mBeanAttributeInfos);
+        when(mbs.getMBeanInfo(getTargetName(NODE1, MEMORY_MXBEAN))).thenReturn(info);
+        when(mbs.getMBeanInfo(getTargetName(NODE2, MEMORY_MXBEAN))).thenReturn(info);
+        when(mbs.getMBeanInfo(getTargetName(NODE3, MEMORY_MXBEAN))).thenReturn(info);
     }
 
     private void setExpectationsForJmxServiceGetMemoryAttribute()
                                                                  throws Exception {
-        when(_jmxService.getAttribute(NODE1, MEMORY_MXBEAN, MEMORY_MXBEAN_HEAP)).thenReturn(_compositeDataHeapNode1);
-        when(_jmxService.getAttribute(NODE2, MEMORY_MXBEAN, MEMORY_MXBEAN_HEAP)).thenReturn(_compositeDataHeapNode2);
-        when(_jmxService.getAttribute(NODE3, MEMORY_MXBEAN, MEMORY_MXBEAN_HEAP)).thenReturn(_compositeDataHeapNode3);
+        Set<ObjectName> names = new HashSet<ObjectName>();
+        names.add(getTargetName(NODE1, MEMORY_MXBEAN));
+        names.add(getTargetName(NODE2, MEMORY_MXBEAN));
+        names.add(getTargetName(NODE3, MEMORY_MXBEAN));
+        when(mbs.queryNames(any(ObjectName.class), any(QueryExp.class))).thenReturn(names);
+        when(
+             mbs.getAttribute(getTargetName(NODE1, MEMORY_MXBEAN),
+                              MEMORY_MXBEAN_HEAP)).thenReturn(_compositeDataHeapNode1);
+        when(
+             mbs.getAttribute(getTargetName(NODE2, MEMORY_MXBEAN),
+                              MEMORY_MXBEAN_HEAP)).thenReturn(_compositeDataHeapNode2);
+        when(
+             mbs.getAttribute(getTargetName(NODE3, MEMORY_MXBEAN),
+                              MEMORY_MXBEAN_HEAP)).thenReturn(_compositeDataHeapNode3);
     }
 
     private void setUriInfoExpectations() throws URISyntaxException {

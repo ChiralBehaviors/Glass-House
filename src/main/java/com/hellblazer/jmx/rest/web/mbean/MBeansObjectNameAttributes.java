@@ -15,6 +15,10 @@ package com.hellblazer.jmx.rest.web.mbean;
 
 import java.util.Collection;
 
+import javax.management.InstanceNotFoundException;
+import javax.management.IntrospectionException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ReflectionException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -41,7 +45,12 @@ public class MBeansObjectNameAttributes {
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public MBeanAttributeValueJaxBeans getAttribute(@PathParam("objectName") String objectName,
-                                                    @QueryParam("nodes") String nodes) {
+                                                    @QueryParam("nodes") String nodes)
+                                                                                      throws MalformedObjectNameException,
+                                                                                      IntrospectionException,
+                                                                                      InstanceNotFoundException,
+                                                                                      NullPointerException,
+                                                                                      ReflectionException {
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
         return aggregateService.getAllAttributeValues(jmxNodes, objectName);
     }

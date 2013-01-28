@@ -16,6 +16,9 @@ package com.hellblazer.jmx.rest.web.mbean;
 import java.util.Collection;
 
 import javax.management.InstanceNotFoundException;
+import javax.management.IntrospectionException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ReflectionException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -36,7 +39,7 @@ import com.hellblazer.jmx.rest.service.AggregateService;
 @Path("/mbeans/{objectName}")
 public class MBeansObjectName {
     private static Logger          log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
-    
+
     private final AggregateService aggregateService;
 
     public MBeansObjectName(AggregateService aggregateService) {
@@ -49,7 +52,11 @@ public class MBeansObjectName {
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public MBeanJaxBean getOperations(@PathParam("objectName") String objectName,
-                                      @QueryParam("nodes") String nodes) {
+                                      @QueryParam("nodes") String nodes)
+                                                                        throws MalformedObjectNameException,
+                                                                        IntrospectionException,
+                                                                        NullPointerException,
+                                                                        ReflectionException {
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
         MBeanAttributeJaxBeans mBeanAttributesJaxBean;

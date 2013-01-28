@@ -4,6 +4,9 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.management.InstanceNotFoundException;
+import javax.management.IntrospectionException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ReflectionException;
 import javax.ws.rs.core.UriInfo;
 
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
@@ -14,16 +17,23 @@ import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
 
 public interface AggregateService {
     public MBeanAttributeValueJaxBeans getAllAttributeValues(Collection<String> jmxNodes,
-                                                             String objectName);
+                                                             String objectName)
+                                                                               throws MalformedObjectNameException,
+                                                                               NullPointerException,
+                                                                               IntrospectionException,
+                                                                               InstanceNotFoundException,
+                                                                               ReflectionException;
 
     public MBeanAttributeJaxBeans getAttributesMetaData(UriInfo uriInfo,
                                                         Collection<String> jmxNodes,
                                                         String objectName)
-                                                                          throws InstanceNotFoundException;
+                                                                          throws InstanceNotFoundException,
+                                                                          MalformedObjectNameException, IntrospectionException, NullPointerException, ReflectionException;
 
     public MBeanAttributeValueJaxBeans getAttributeValues(Collection<String> jmxNodes,
                                                           String objectName,
-                                                          String attributeName);
+                                                          String attributeName)
+                                                                               throws MalformedObjectNameException;
 
     public List<String> getMbeanServerNodes();
 
@@ -36,15 +46,19 @@ public interface AggregateService {
 
     public MBeanOperationJaxBeans getOperationsMetaData(UriInfo uriInfo,
                                                         Collection<String> jmxNodes,
-                                                        String objectName);
+                                                        String objectName) throws MalformedObjectNameException, NullPointerException, IntrospectionException, InstanceNotFoundException, ReflectionException;
 
     public OperationReturnValueJaxBeans invokeOperation(Collection<String> jmxNodes,
                                                         String objectName,
-                                                        String operationName);
+                                                        String operationName)
+                                                                             throws MalformedObjectNameException,
+                                                                             NullPointerException;
 
     public OperationReturnValueJaxBeans invokeOperation(Collection<String> jmxNodes,
                                                         String objectName,
                                                         String operationName,
                                                         Object[] params,
-                                                        String[] signature);
+                                                        String[] signature)
+                                                                           throws MalformedObjectNameException,
+                                                                           NullPointerException;
 }

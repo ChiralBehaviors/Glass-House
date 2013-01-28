@@ -27,9 +27,7 @@ import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.jmx.discovery.Hub;
 import com.hellblazer.jmx.rest.JmxHealthCheck;
 import com.hellblazer.jmx.rest.service.AggregateService;
-import com.hellblazer.jmx.rest.service.JMXService;
 import com.hellblazer.jmx.rest.service.impl.AggregateServiceImpl;
-import com.hellblazer.jmx.rest.service.impl.JMXServiceImpl;
 import com.hellblazer.jmx.rest.web.Index;
 import com.hellblazer.jmx.rest.web.Nodes;
 import com.hellblazer.jmx.rest.web.mbean.MBeans;
@@ -88,8 +86,7 @@ public class HubService extends Service<HubConfiguration> {
             hub.listenFor("(" + SERVICE_TYPE + "=" + serviceType + ")");
         }
         environment.addHealthCheck(new JmxHealthCheck());
-        JMXService jmxService = new JMXServiceImpl(mbs);
-        AggregateService aggregateService = new AggregateServiceImpl(jmxService);
+        AggregateService aggregateService = new AggregateServiceImpl(mbs);
         environment.addResource(new MBeans(aggregateService));
         environment.addResource(new MBeansObjectName(aggregateService));
         environment.addResource(new MBeansObjectNameAttributes(aggregateService));

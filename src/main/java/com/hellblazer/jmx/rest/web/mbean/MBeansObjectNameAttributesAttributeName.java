@@ -15,6 +15,7 @@ package com.hellblazer.jmx.rest.web.mbean;
 
 import java.util.Collection;
 
+import javax.management.MalformedObjectNameException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -43,7 +44,8 @@ public class MBeansObjectNameAttributesAttributeName {
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public MBeanAttributeValueJaxBeans getAttribute(@PathParam("objectName") String objectName,
                                                     @PathParam("attributeName") String attributeName,
-                                                    @QueryParam("nodes") String nodes) {
+                                                    @QueryParam("nodes") String nodes)
+                                                                                      throws MalformedObjectNameException {
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
         return aggregateService.getAttributeValues(jmxNodes, objectName,
                                                    attributeName);
