@@ -22,4 +22,55 @@ package com.hellblazer.jmx.rest.service.impl;
  */
 public class Test2 implements Test2MBean {
 
+    private int attribute1 = -1;
+    private int attribute2 = -1;
+
+    /* (non-Javadoc)
+     * @see com.hellblazer.jmx.rest.service.impl.Test2MBean#getAttribute1()
+     */
+    @Override
+    public int getAttribute1() {
+        return attribute1;
+    }
+
+    /* (non-Javadoc)
+     * @see com.hellblazer.jmx.rest.service.impl.Test2MBean#setAttribute1(int)
+     */
+    @Override
+    public void setAttribute1(int value) {
+        attribute1 = value;
+
+    }
+
+    /* (non-Javadoc)
+     * @see com.hellblazer.jmx.rest.service.impl.Test2MBean#getAttribute2()
+     */
+    @Override
+    public int getAttribute2() {
+        return attribute2;
+    }
+
+    /* (non-Javadoc)
+     * @see com.hellblazer.jmx.rest.service.impl.Test2MBean#setAttribute2(int)
+     */
+    @Override
+    public void setAttribute2(int value) {
+        attribute2 = value;
+    }
+
+    /* (non-Javadoc)
+     * @see com.hellblazer.jmx.rest.service.impl.Test2MBean#operation1()
+     */
+    @Override
+    public String operation1() {
+        return Integer.toString(attribute1);
+    }
+
+    /* (non-Javadoc)
+     * @see com.hellblazer.jmx.rest.service.impl.Test2MBean#operation2()
+     */
+    @Override
+    public String operation2() {
+        return Integer.toString(attribute2);
+    }
 }

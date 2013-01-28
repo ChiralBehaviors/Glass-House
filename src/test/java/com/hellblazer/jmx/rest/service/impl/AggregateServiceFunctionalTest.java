@@ -16,33 +16,40 @@
 
 package com.hellblazer.jmx.rest.service.impl;
 
+import static junit.framework.Assert.assertEquals;
+
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
+import javax.management.ObjectName;
 import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.jmx.rest.AbstractMockitoTest;
+import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBeans;
+import com.hellblazer.jmx.rest.service.AggregateService;
 
 public class AggregateServiceFunctionalTest extends AbstractMockitoTest {
 
-    public static final String MEMORY_MXBEAN                             = "java.lang:type=Memory";
-    public static final String THREADING_MXBEAN                          = "java.lang:type=Threading";
-    public static final String MEMORY_MXBEAN_HEAP                        = "HeapMemoryUsage";
-    public static final String MEMORY_MXBEAN_NONHEAP                     = "NonHeapMemoryUsage";
-    public static final String MEMORY_MXBEAN_OBJECT_PENDING_FINALIZATION = "ObjectPendingFinalizationCount";
-    public static final String MEMORY_MXBEAN_VERBOSE                     = "Verbose";
+    public static final String ATTRIBUTE_1 = "Attribute1";
+    public static final String ATTRIBUTE_2 = "Attribute2";
+    public static final String OPERATION_1 = "Operation1";
+    public static final String OPERATION_2 = "Operation1";
+    public static final String TEST_1_BEAN = "mydomain:type=Test1";
+    public static final String TEST_2_BEAN = "mydomain:type=Test2";
 
     private static int allocatePort() {
         InetSocketAddress address = new InetSocketAddress("localhost", 0);
@@ -74,11 +81,16 @@ public class AggregateServiceFunctionalTest extends AbstractMockitoTest {
         return JMXConnectorServerFactory.newJMXConnectorServer(url, env, mbs);
     }
 
+    private AggregateService   aggregateService;
+    private CascadingService   cascadingService;
+    private Set<String>        jmxNodes;
     private MBeanServer        mBeanServer;
     private MBeanServer        mbs1;
     private MBeanServer        mbs2;
     private MBeanServer        mbs3;
-    private CascadingService   cascadingService;
+    private String             node1;
+    private String             node2;
+    private String             node3;
     private JMXConnectorServer server1;
     private JMXConnectorServer server2;
     private JMXConnectorServer server3;
@@ -88,32 +100,40 @@ public class AggregateServiceFunctionalTest extends AbstractMockitoTest {
         mBeanServer = MBeanServerFactory.newMBeanServer();
 
         mbs1 = MBeanServerFactory.newMBeanServer();
+        mbs2 = MBeanServerFactory.newMBeanServer();
+        mbs3 = MBeanServerFactory.newMBeanServer();
+
         cascadingService = new CascadingService(mBeanServer);
-        int node1 = allocatePort();
+        int port1 = allocatePort();
         InetSocketAddress jmxEndpoint = new InetSocketAddress("localhost",
-                                                              node1);
-        server1 = contruct(jmxEndpoint,
-                           ManagementFactory.getPlatformMBeanServer());
+                                                              port1);
+        server1 = contruct(jmxEndpoint, mbs1);
         server1.start();
 
-        int node2 = allocatePort();
-        jmxEndpoint = new InetSocketAddress("localhost", node2);
-        server2 = contruct(jmxEndpoint,
-                           ManagementFactory.getPlatformMBeanServer());
+        int port2 = allocatePort();
+        jmxEndpoint = new InetSocketAddress("localhost", port2);
+        server2 = contruct(jmxEndpoint, mbs2);
         server2.start();
 
-        int node3 = allocatePort();
-        jmxEndpoint = new InetSocketAddress("localhost", node3);
-        server3 = contruct(jmxEndpoint,
-                           ManagementFactory.getPlatformMBeanServer());
+        int port3 = allocatePort();
+        jmxEndpoint = new InetSocketAddress("localhost", port3);
+        server3 = contruct(jmxEndpoint, mbs3);
         server3.start();
 
-        cascadingService.mount(server1.getAddress().toString(), "*:*",
-                               String.format("%s|%s", "localhost", node1));
-        cascadingService.mount(server1.getAddress().toString(), "*:*",
-                               String.format("%s|%s", "localhost", node2));
-        cascadingService.mount(server1.getAddress().toString(), "*:*",
-                               String.format("%s|%s", "localhost", node3));
+        node1 = String.format("%s|%s", "localhost", port1);
+        node2 = String.format("%s|%s", "localhost", port2);
+        node3 = String.format("%s|%s", "localhost", port3);
+
+        jmxNodes = new HashSet<String>();
+        jmxNodes.add(node1);
+        jmxNodes.add(node2);
+        jmxNodes.add(node3);
+
+        cascadingService.mount(server1.getAddress().toString(), "*:*", node1);
+        cascadingService.mount(server1.getAddress().toString(), "*:*", node2);
+        cascadingService.mount(server1.getAddress().toString(), "*:*", node3);
+
+        aggregateService = new AggregateServiceImpl(mBeanServer);
     }
 
     @After
@@ -121,5 +141,33 @@ public class AggregateServiceFunctionalTest extends AbstractMockitoTest {
         server1.stop();
         server2.stop();
         server3.stop();
+    }
+
+    @Test
+    public void testGetAllAttributeValues() throws Exception {
+        Test1 test1 = new Test1();
+        test1.setAttribute1(1);
+        test1.setAttribute2(2);
+
+        Test2 test2 = new Test2();
+        test2.setAttribute1(1);
+        test2.setAttribute2(2);
+
+        mbs1.registerMBean(test1, ObjectName.getInstance(TEST_1_BEAN));
+        mbs1.registerMBean(test2, ObjectName.getInstance(TEST_2_BEAN));
+
+        mbs2.registerMBean(test1, ObjectName.getInstance(TEST_1_BEAN));
+        mbs2.registerMBean(test2, ObjectName.getInstance(TEST_2_BEAN));
+
+        mbs3.registerMBean(test1, ObjectName.getInstance(TEST_1_BEAN));
+        mbs3.registerMBean(test2, ObjectName.getInstance(TEST_2_BEAN));
+
+        Thread.sleep(1000);
+
+        MBeanAttributeValueJaxBeans attributes = aggregateService.getAllAttributeValues(jmxNodes,
+                                                                                        TEST_1_BEAN);
+
+        assertEquals("expected 2 values for each node", 6,
+                     attributes.mBeanAttributeValueJaxBeans.size());
     }
 }

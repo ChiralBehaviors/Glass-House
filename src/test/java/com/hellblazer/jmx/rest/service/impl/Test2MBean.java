@@ -18,8 +18,19 @@ package com.hellblazer.jmx.rest.service.impl;
 
 /**
  * @author hhildebrand
- *
+ * 
  */
 public interface Test2MBean {
 
+    int getAttribute1();
+
+    void setAttribute1(int value);
+
+    int getAttribute2();
+
+    void setAttribute2(int value);
+
+    String operation1();
+
+    String operation2();
 }

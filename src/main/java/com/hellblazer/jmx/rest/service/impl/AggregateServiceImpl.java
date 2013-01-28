@@ -304,7 +304,7 @@ public class AggregateServiceImpl implements AggregateService {
         QueryExp attributeQuery = constructNodeQuery(jmxNodes);
 
         ObjectName idParsed = ObjectName.getInstance(parseObjectNameToAggregateMBeansWithMultipleIDs(objectName));
-        if (idParsed.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME) != null) {
+        if (idParsed.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME) == null) {
             idParsed = wildcardNodeForm(idParsed);
         }
         return mbeanServer.queryNames(idParsed, attributeQuery);
