@@ -30,7 +30,5 @@ public interface Test2MBean {
 
     void setAttribute2(int value);
 
-    String operation1();
-
-    String operation2();
+    String operationFoo(String param);
 }

@@ -155,10 +155,13 @@ public class AggregateServiceImpl implements AggregateService {
 
         Set<MBeanShortJaxBean> mBeanShortJaxBeans = new TreeSet<MBeanShortJaxBean>();
         for (String jmxNode : jmxNodes) {
-            Set<ObjectName> nodeObjectNames;
             try {
-                nodeObjectNames = mbeanServer.queryNames(getNodeWildcardName(jmxNode),
-                                                         null);
+                Collection<ObjectName> originalNames = mbeanServer.queryNames(getNodeWildcardName(jmxNode),
+                                                                              null);
+                Set<ObjectName> nodeObjectNames = new HashSet<ObjectName>();
+                for (ObjectName stripped : originalNames) {
+                    nodeObjectNames.add(stripNodeName(stripped));
+                }
                 if (commonObjectNames.isEmpty()) {
                     commonObjectNames.addAll(nodeObjectNames);
                 } else {
@@ -167,7 +170,7 @@ public class AggregateServiceImpl implements AggregateService {
                 }
             } catch (MalformedObjectNameException | NullPointerException e) {
                 log.warn(String.format("Exception getting object names for node %s",
-                                       jmxNode));
+                                       jmxNode), e);
             }
 
         }
@@ -272,7 +275,7 @@ public class AggregateServiceImpl implements AggregateService {
         return new MBeanAttributeValueJaxBean(
                                               attributeName,
                                               objectName.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME),
-                                              objectName.getCanonicalName(),
+                                              stripNodeName(objectName).getCanonicalName(),
                                               value, exception);
     }
 
@@ -335,10 +338,47 @@ public class AggregateServiceImpl implements AggregateService {
                                                     list);
             return ObjectName.getInstance(targetName);
         } catch (MalformedObjectNameException x) {
-            log.error(String.format("Cannot crreate wild card nod form of source name %s",
+            log.error(String.format("Cannot create wild card nod form of source name %s",
                                     sourceName), x);
             throw new IllegalStateException(
-                                            String.format("Cannot crreate wild card nod form of source name %s",
+                                            String.format("Cannot create wild card nod form of source name %s",
+                                                          sourceName), x);
+        }
+    }
+
+    /**
+     * @param nodeX
+     * @param sourceName
+     * @return
+     */
+    public static ObjectName stripNodeName(ObjectName sourceName) {
+        if (sourceName.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME) == null) {
+            return sourceName;
+        }
+        try {
+            final String domain = sourceName.getDomain();
+            final String list = sourceName.getKeyPropertyListString();
+            int index = list.indexOf(CascadingAgent.CASCADED_NODE_PROPERTY_NAME);
+            if (index == -1) {
+                throw new IllegalStateException(
+                                                String.format("Did not find the %s property in string scan of %s",
+                                                              CascadingAgent.CASCADED_NODE_PROPERTY_NAME,
+                                                              list));
+            }
+            String prefix = list.substring(0, index);
+            int suffixIndex = list.indexOf(',', index);
+            String suffix = "";
+            if (suffixIndex > 0) {
+                suffix = list.substring(suffixIndex + 1);
+            }
+
+            return ObjectName.getInstance(String.format("%s:%s%s", domain,
+                                                        prefix, suffix));
+        } catch (MalformedObjectNameException x) {
+            log.error(String.format("Cannot create wild card nod form of source name %s",
+                                    sourceName), x);
+            throw new IllegalStateException(
+                                            String.format("Cannot create wild card nod form of source name %s",
                                                           sourceName), x);
         }
     }

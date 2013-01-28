@@ -26,15 +26,22 @@ import com.hellblazer.gossip.configuration.YamlHelper;
 import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.jmx.discovery.Hub;
 import com.hellblazer.jmx.rest.JmxHealthCheck;
+import com.hellblazer.jmx.rest.mbean.aggregate.MBeans;
+import com.hellblazer.jmx.rest.mbean.aggregate.MBeansObjectName;
+import com.hellblazer.jmx.rest.mbean.aggregate.MBeansObjectNameAttributes;
+import com.hellblazer.jmx.rest.mbean.aggregate.MBeansObjectNameAttributesAttributeName;
+import com.hellblazer.jmx.rest.mbean.aggregate.MBeansObjectNameOperationsOperationName;
+import com.hellblazer.jmx.rest.mbean.singular.MBean;
+import com.hellblazer.jmx.rest.mbean.singular.MBeanObjectName;
+import com.hellblazer.jmx.rest.mbean.singular.MBeanObjectNameAttributes;
+import com.hellblazer.jmx.rest.mbean.singular.MBeanObjectNameAttributesAttributeName;
+import com.hellblazer.jmx.rest.mbean.singular.MBeanObjectNameOperationsOperationName;
 import com.hellblazer.jmx.rest.service.AggregateService;
+import com.hellblazer.jmx.rest.service.JmxService;
 import com.hellblazer.jmx.rest.service.impl.AggregateServiceImpl;
+import com.hellblazer.jmx.rest.service.impl.JmxServiceImpl;
 import com.hellblazer.jmx.rest.web.Index;
 import com.hellblazer.jmx.rest.web.Nodes;
-import com.hellblazer.jmx.rest.web.mbean.MBeans;
-import com.hellblazer.jmx.rest.web.mbean.MBeansObjectName;
-import com.hellblazer.jmx.rest.web.mbean.MBeansObjectNameAttributes;
-import com.hellblazer.jmx.rest.web.mbean.MBeansObjectNameAttributesAttributeName;
-import com.hellblazer.jmx.rest.web.mbean.MBeansObjectNameOperationsOperationName;
 import com.hellblazer.nexus.GossipScope;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -83,10 +90,20 @@ public class HubService extends Service<HubConfiguration> {
                       configuration.sourceMap, scope,
                       configuration.nodeNamePattern);
         for (String serviceType : configuration.serviceNames) {
-            hub.listenFor("(" + SERVICE_TYPE + "=" + serviceType + ")");
+            hub.listenFor(String.format("(%s=%s)", SERVICE_TYPE, serviceType));
         }
         environment.addHealthCheck(new JmxHealthCheck());
+        JmxService jmxService = new JmxServiceImpl(mbs);
         AggregateService aggregateService = new AggregateServiceImpl(mbs);
+
+        environment.addResource(new MBean(jmxService));
+        environment.addResource(new MBeanObjectName(jmxService));
+        environment.addResource(new MBeanObjectNameAttributes(jmxService));
+        environment.addResource(new MBeanObjectNameAttributesAttributeName(
+                                                                           jmxService));
+        environment.addResource(new MBeanObjectNameOperationsOperationName(
+                                                                           jmxService));
+
         environment.addResource(new MBeans(aggregateService));
         environment.addResource(new MBeansObjectName(aggregateService));
         environment.addResource(new MBeansObjectNameAttributes(aggregateService));

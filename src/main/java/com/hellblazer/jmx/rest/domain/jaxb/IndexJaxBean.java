@@ -19,9 +19,6 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/* ------------------------------------------------------------ */
-/**
- */
 @XmlRootElement(name = "Index")
 public class IndexJaxBean {
     public URI mBeans;
@@ -32,6 +29,8 @@ public class IndexJaxBean {
 
     public IndexJaxBean(UriInfo uriInfo) {
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+        mBeans = uriBuilder.path("mbean").build();
+        uriBuilder = uriInfo.getAbsolutePathBuilder();
         mBeans = uriBuilder.path("mbeans").build();
         uriBuilder = uriInfo.getAbsolutePathBuilder();
         nodes = uriBuilder.path("nodes").build();

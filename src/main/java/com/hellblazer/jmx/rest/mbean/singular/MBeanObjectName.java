@@ -11,9 +11,7 @@
 // You may elect to redistribute this code under either of these licenses. 
 // ========================================================================
 
-package com.hellblazer.jmx.rest.web.mbean;
-
-import java.util.Collection;
+package com.hellblazer.jmx.rest.mbean.singular;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
@@ -23,7 +21,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -34,16 +31,17 @@ import org.slf4j.LoggerFactory;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
-import com.hellblazer.jmx.rest.service.AggregateService;
+import com.hellblazer.jmx.rest.mbean.aggregate.MBeansObjectNameAttributes;
+import com.hellblazer.jmx.rest.service.JmxService;
 
-@Path("/mbeans/{objectName}")
-public class MBeansObjectName {
-    private static Logger          log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
+@Path("/mbean/{objectName}")
+public class MBeanObjectName {
+    private static Logger    log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
 
-    private final AggregateService aggregateService;
+    private final JmxService jmxService;
 
-    public MBeansObjectName(AggregateService aggregateService) {
-        this.aggregateService = aggregateService;
+    public MBeanObjectName(JmxService jmxService) {
+        this.jmxService = jmxService;
     }
 
     @Context
@@ -51,23 +49,18 @@ public class MBeansObjectName {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public MBeanJaxBean getOperations(@PathParam("objectName") String objectName,
-                                      @QueryParam("nodes") String nodes)
-                                                                        throws MalformedObjectNameException,
-                                                                        IntrospectionException,
-                                                                        NullPointerException,
-                                                                        ReflectionException {
-        Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
-
+    public MBeanJaxBean getOperations(@PathParam("objectName") String objectName)
+                                                                                 throws MalformedObjectNameException,
+                                                                                 IntrospectionException,
+                                                                                 NullPointerException,
+                                                                                 ReflectionException {
         MBeanAttributeJaxBeans mBeanAttributesJaxBean;
         MBeanOperationJaxBeans mBeanOperationsJaxBean;
         try {
-            mBeanAttributesJaxBean = aggregateService.getAttributesMetaData(uriInfo,
-                                                                            jmxNodes,
-                                                                            objectName);
-            mBeanOperationsJaxBean = aggregateService.getOperationsMetaData(uriInfo,
-                                                                            jmxNodes,
-                                                                            objectName);
+            mBeanAttributesJaxBean = jmxService.getAttributesMetaData(uriInfo,
+                                                                      objectName);
+            mBeanOperationsJaxBean = jmxService.getOperationsMetaData(uriInfo,
+                                                                      objectName);
         } catch (InstanceNotFoundException e) {
             log.info("getOperations: ", e);
             return MBeanJaxBean.EMPTY_MBEAN_JAX_BEAN;

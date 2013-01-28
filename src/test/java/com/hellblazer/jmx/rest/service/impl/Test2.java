@@ -59,18 +59,10 @@ public class Test2 implements Test2MBean {
     }
 
     /* (non-Javadoc)
-     * @see com.hellblazer.jmx.rest.service.impl.Test2MBean#operation1()
+     * @see com.hellblazer.jmx.rest.service.impl.Test2MBean#operationFoo()
      */
     @Override
-    public String operation1() {
-        return Integer.toString(attribute1);
-    }
-
-    /* (non-Javadoc)
-     * @see com.hellblazer.jmx.rest.service.impl.Test2MBean#operation2()
-     */
-    @Override
-    public String operation2() {
-        return Integer.toString(attribute2);
+    public String operationFoo(String param) {
+        return param;
     }
 }

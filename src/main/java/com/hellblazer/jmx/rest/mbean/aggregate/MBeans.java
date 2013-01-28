@@ -11,7 +11,7 @@
 // You may elect to redistribute this code under either of these licenses. 
 // ========================================================================
 
-package com.hellblazer.jmx.rest.web.mbean;
+package com.hellblazer.jmx.rest.mbean.aggregate;
 
 import java.util.Collection;
 
