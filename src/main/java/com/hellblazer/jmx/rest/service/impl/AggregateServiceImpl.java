@@ -174,9 +174,10 @@ public class AggregateServiceImpl implements AggregateService {
             }
 
         }
-        for (String objectNameString : getObjectNamesWithoutId(commonObjectNames)) {
-            mBeanShortJaxBeans.add(new MBeanShortJaxBean(uriInfo,
-                                                         objectNameString));
+        for (ObjectName n : commonObjectNames) {
+            mBeanShortJaxBeans.add(new MBeanShortJaxBean(
+                                                         uriInfo,
+                                                         stripNodeName(n).getCanonicalName()));
         }
         return new MBeanShortJaxBeans(mBeanShortJaxBeans);
     }
@@ -279,38 +280,16 @@ public class AggregateServiceImpl implements AggregateService {
                                               value, exception);
     }
 
-    private Set<String> getObjectNamesWithoutId(Set<ObjectName> objectNames) {
-        Set<String> objectNameStrings = new TreeSet<String>();
-        for (ObjectName objectName : objectNames) {
-            objectNameStrings.add(objectName.toString().replaceFirst(ID_REPLACE_REGEX,
-                                                                     ""));
-        }
-        return objectNameStrings;
-    }
-
-    private String parseObjectNameToAggregateMBeansWithMultipleIDs(String objectName) {
-        Set<String> objectNames = new TreeSet<String>();
-        objectNames.add(objectName);
-
-        String idMatchRegex = ".*?" + ID_REPLACE_REGEX;
-
-        if (objectName.matches(idMatchRegex)) {
-            return objectName.replaceFirst(ID_REPLACE_REGEX, "");
-        }
-        return objectName;
-    }
-
     private Set<ObjectName> queryObjectNames(Collection<String> jmxNodes,
-                                             String objectName)
-                                                               throws MalformedObjectNameException,
-                                                               NullPointerException {
+                                             String name)
+                                                         throws MalformedObjectNameException,
+                                                         NullPointerException {
         QueryExp attributeQuery = constructNodeQuery(jmxNodes);
-
-        ObjectName idParsed = ObjectName.getInstance(parseObjectNameToAggregateMBeansWithMultipleIDs(objectName));
-        if (idParsed.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME) == null) {
-            idParsed = wildcardNodeForm(idParsed);
+        ObjectName objectName = ObjectName.getInstance(name);
+        if (objectName.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME) == null) {
+            objectName = wildcardNodeForm(objectName);
         }
-        return mbeanServer.queryNames(idParsed, attributeQuery);
+        return mbeanServer.queryNames(objectName, attributeQuery);
     }
 
     private void removeObjectNamesWhichDoNotExistOnCurrentNode(Set<ObjectName> commonObjectNames,

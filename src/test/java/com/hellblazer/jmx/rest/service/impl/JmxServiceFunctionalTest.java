@@ -50,7 +50,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hellblazer.jmx.cascading.CascadingService;
-import com.hellblazer.jmx.rest.AbstractMockitoTest;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBeans;
@@ -58,7 +57,7 @@ import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBean;
 import com.hellblazer.jmx.rest.service.JmxService;
 
-public class JmxServiceFunctionalTest extends AbstractMockitoTest {
+public class JmxServiceFunctionalTest {
     private static final Logger log         = LoggerFactory.getLogger(JmxServiceFunctionalTest.class);
 
     public static final String  ATTRIBUTE_1 = "Attribute1";

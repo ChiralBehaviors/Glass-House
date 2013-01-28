@@ -50,7 +50,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hellblazer.jmx.cascading.CascadingService;
-import com.hellblazer.jmx.rest.AbstractMockitoTest;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBeans;
@@ -59,7 +58,7 @@ import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
 import com.hellblazer.jmx.rest.service.AggregateService;
 
-public class AggregateServiceFunctionalTest extends AbstractMockitoTest {
+public class AggregateServiceFunctionalTest {
     private static final Logger log         = LoggerFactory.getLogger(AggregateServiceFunctionalTest.class);
 
     public static final String  ATTRIBUTE_1 = "Attribute1";
@@ -226,28 +225,6 @@ public class AggregateServiceFunctionalTest extends AbstractMockitoTest {
 
         assertEquals(2,
                      mBeanAttributesInfoJaxBean.mBeanAttributeJaxBeans.size());
-    }
-
-    @Test
-    public void testGetAttributesMetaDataWithBeanAvailableOnlyOnOneNode()
-                                                                         throws Exception {
-        Test1 test1 = new Test1();
-        test1.setAttribute1(1);
-        test1.setAttribute2(2);
-
-        mbs1.registerMBean(test1, ObjectName.getInstance(TEST_1_BEAN));
-
-        mbs3.registerMBean(test1, ObjectName.getInstance(TEST_1_BEAN));
-
-        Thread.sleep(100);
-
-        MBeanAttributeJaxBeans mBeanAttributesInfoJaxBean = aggregateService.getAttributesMetaData(uriInfo,
-                                                                                                   jmxNodes,
-                                                                                                   TEST_1_BEAN);
-
-        assertEquals(0,
-                     mBeanAttributesInfoJaxBean.mBeanAttributeJaxBeans.size());
-
     }
 
     @Test
