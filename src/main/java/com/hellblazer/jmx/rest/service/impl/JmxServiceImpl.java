@@ -41,7 +41,6 @@ import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanShortJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBean;
-import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
 import com.hellblazer.jmx.rest.service.JmxService;
 
 /**
@@ -148,10 +147,10 @@ public class JmxServiceImpl implements JmxService {
      * @see com.hellblazer.jmx.rest.service.JmxService#invokeOperation(java.lang.String, java.lang.String)
      */
     @Override
-    public OperationReturnValueJaxBeans invokeOperation(String objectName,
-                                                        String operationName)
-                                                                             throws MalformedObjectNameException,
-                                                                             NullPointerException {
+    public OperationReturnValueJaxBean invokeOperation(String objectName,
+                                                       String operationName)
+                                                                            throws MalformedObjectNameException,
+                                                                            NullPointerException {
         return invokeOperation(objectName, operationName, new Object[] {},
                                new String[] {});
     }
@@ -160,13 +159,12 @@ public class JmxServiceImpl implements JmxService {
      * @see com.hellblazer.jmx.rest.service.JmxService#invokeOperation(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[])
      */
     @Override
-    public OperationReturnValueJaxBeans invokeOperation(String objectName,
-                                                        String operationName,
-                                                        Object[] params,
-                                                        String[] signature)
-                                                                           throws MalformedObjectNameException,
-                                                                           NullPointerException {
-        Set<OperationReturnValueJaxBean> operationReturnValueJaxBeans = new TreeSet<OperationReturnValueJaxBean>();
+    public OperationReturnValueJaxBean invokeOperation(String objectName,
+                                                       String operationName,
+                                                       Object[] params,
+                                                       String[] signature)
+                                                                          throws MalformedObjectNameException,
+                                                                          NullPointerException {
         ObjectName n = ObjectName.getInstance(objectName);
         Object returnValue = null;
         String exception = null;
@@ -176,12 +174,9 @@ public class JmxServiceImpl implements JmxService {
                 | InstanceNotFoundException e) {
             exception = e.toString();
         }
-        operationReturnValueJaxBeans.add(new OperationReturnValueJaxBean(
-                                                                         n.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME),
-                                                                         returnValue,
-                                                                         exception));
-
-        return new OperationReturnValueJaxBeans(operationReturnValueJaxBeans);
+        return new OperationReturnValueJaxBean(
+                                               n.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME),
+                                               returnValue, exception);
     }
 
     /**
@@ -199,7 +194,9 @@ public class JmxServiceImpl implements JmxService {
                 | ReflectionException | InstanceNotFoundException e) {
             exception = e.toString();
         }
-        return new MBeanAttributeValueJaxBean(attributeName, "",
+        return new MBeanAttributeValueJaxBean(
+                                              attributeName,
+                                              n.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME),
                                               n.getCanonicalName(), value,
                                               exception);
     }

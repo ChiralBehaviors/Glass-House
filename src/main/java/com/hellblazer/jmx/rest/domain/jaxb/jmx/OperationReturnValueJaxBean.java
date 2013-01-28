@@ -34,7 +34,11 @@ public class OperationReturnValueJaxBean implements
     public OperationReturnValueJaxBean(String nodeName, Object object,
                                        String exception) {
         this.nodeName = nodeName;
-        returnValue = object == null ? "success" : object.toString();
+        if (exception != null) {
+            returnValue = "failure!";
+        } else {
+            returnValue = object == null ? "success" : object.toString();
+        }
         this.exception = exception;
     }
 

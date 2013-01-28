@@ -26,7 +26,7 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
+import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBean;
 import com.hellblazer.jmx.rest.service.JmxService;
 
 @Path("/mbean/{objectName}/operations/{operationName}")
@@ -41,10 +41,10 @@ public class MBeanObjectNameOperationsOperationName {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public OperationReturnValueJaxBeans invokeOperation(@PathParam("objectName") String objectName,
-                                                        @PathParam("operationName") String operationName)
-                                                                                                         throws MalformedObjectNameException,
-                                                                                                         NullPointerException {
+    public OperationReturnValueJaxBean invokeOperation(@PathParam("objectName") String objectName,
+                                                       @PathParam("operationName") String operationName)
+                                                                                                        throws MalformedObjectNameException,
+                                                                                                        NullPointerException {
         log.info("invokeOperationWithParameters: " + operationName);
 
         return jmxService.invokeOperation(objectName, operationName);
@@ -53,12 +53,12 @@ public class MBeanObjectNameOperationsOperationName {
     @GET
     @Path("/{params}/{signature}")
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public OperationReturnValueJaxBeans invokeOperationWithParameters(@PathParam("objectName") String objectName,
-                                                                      @PathParam("operationName") String operationName,
-                                                                      @PathParam("params") String params,
-                                                                      @PathParam("signature") String signature)
-                                                                                                               throws MalformedObjectNameException,
-                                                                                                               NullPointerException {
+    public OperationReturnValueJaxBean invokeOperationWithParameters(@PathParam("objectName") String objectName,
+                                                                     @PathParam("operationName") String operationName,
+                                                                     @PathParam("params") String params,
+                                                                     @PathParam("signature") String signature)
+                                                                                                              throws MalformedObjectNameException,
+                                                                                                              NullPointerException {
         log.info("invokeOperationWithParameters: " + operationName);
 
         String[] paramArray = params.split(",");

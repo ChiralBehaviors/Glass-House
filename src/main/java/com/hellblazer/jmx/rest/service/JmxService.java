@@ -27,7 +27,7 @@ import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
-import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
+import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBean;
 
 /**
  * @author hhildebrand
@@ -99,10 +99,10 @@ public interface JmxService {
      * @throws NullPointerException
      * @throws MalformedObjectNameException
      */
-    OperationReturnValueJaxBeans invokeOperation(String objectName,
-                                                 String operationName)
-                                                                      throws MalformedObjectNameException,
-                                                                      NullPointerException;
+    OperationReturnValueJaxBean invokeOperation(String objectName,
+                                                String operationName)
+                                                                     throws MalformedObjectNameException,
+                                                                     NullPointerException;
 
     /**
      * @param objectName
@@ -113,12 +113,12 @@ public interface JmxService {
      * @throws NullPointerException
      * @throws MalformedObjectNameException
      */
-    OperationReturnValueJaxBeans invokeOperation(String objectName,
-                                                 String operationName,
-                                                 Object[] paramArray,
-                                                 String[] signatureArray)
-                                                                         throws MalformedObjectNameException,
-                                                                         NullPointerException;
+    OperationReturnValueJaxBean invokeOperation(String objectName,
+                                                String operationName,
+                                                Object[] paramArray,
+                                                String[] signatureArray)
+                                                                        throws MalformedObjectNameException,
+                                                                        NullPointerException;
 
     /**
      * @param objectName
