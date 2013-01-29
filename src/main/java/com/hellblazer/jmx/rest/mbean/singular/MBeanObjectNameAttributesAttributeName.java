@@ -28,7 +28,7 @@ import javax.ws.rs.core.UriInfo;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBean;
 import com.hellblazer.jmx.rest.service.JmxService;
 
-@Path("/mbean/{objectName}/attributes/{attributeName}")
+@Path("jmx/mbean/{objectName}/attributes/{attributeName}")
 public class MBeanObjectNameAttributesAttributeName {
 
     public MBeanObjectNameAttributesAttributeName(JmxService jmxService) {

@@ -31,7 +31,7 @@ import javax.ws.rs.core.UriInfo;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBeans;
 import com.hellblazer.jmx.rest.service.AggregateService;
 
-@Path("/mbeans/{objectName}/attributes")
+@Path("jmx/aggregate/{objectName}/attributes")
 public class MBeansObjectNameAttributes {
 
     public MBeansObjectNameAttributes(AggregateService aggregateService) {

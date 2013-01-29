@@ -21,17 +21,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "Index")
 public class IndexJaxBean {
-    public URI mBeans;
     public URI nodes;
+    public URI aggregate;
+    public URI mBean;
 
     public IndexJaxBean() {
     }
 
     public IndexJaxBean(UriInfo uriInfo) {
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
-        mBeans = uriBuilder.path("mbean").build();
+        aggregate = uriBuilder.path("aggregate").build();
         uriBuilder = uriInfo.getAbsolutePathBuilder();
-        mBeans = uriBuilder.path("mbeans").build();
+        mBean = uriBuilder.path("mbean").build();
         uriBuilder = uriInfo.getAbsolutePathBuilder();
         nodes = uriBuilder.path("nodes").build();
     }

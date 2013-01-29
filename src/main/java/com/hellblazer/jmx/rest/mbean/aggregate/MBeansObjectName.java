@@ -36,7 +36,7 @@ import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanJaxBean;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
 import com.hellblazer.jmx.rest.service.AggregateService;
 
-@Path("/mbeans/{objectName}")
+@Path("jmx/aggregate/{objectName}")
 public class MBeansObjectName {
     private static Logger          log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
 

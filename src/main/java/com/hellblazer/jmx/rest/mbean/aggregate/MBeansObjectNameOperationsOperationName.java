@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
 import com.hellblazer.jmx.rest.service.AggregateService;
 
-@Path("/mbeans/{objectName}/operations/{operationName}")
+@Path("jmx/aggregate/{objectName}/operations/{operationName}")
 public class MBeansObjectNameOperationsOperationName {
     public MBeansObjectNameOperationsOperationName(AggregateService aggregateService) {
         this.aggregateService = aggregateService;

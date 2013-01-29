@@ -96,6 +96,9 @@ public class HubService extends Service<HubConfiguration> {
         JmxService jmxService = new JmxServiceImpl(mbs);
         AggregateService aggregateService = new AggregateServiceImpl(mbs);
 
+        environment.addResource(Index.class);
+        environment.addResource(Nodes.class);
+
         environment.addResource(new MBean(jmxService));
         environment.addResource(new MBeanObjectName(jmxService));
         environment.addResource(new MBeanObjectNameAttributes(jmxService));

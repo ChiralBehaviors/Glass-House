@@ -26,8 +26,10 @@ import javax.ws.rs.core.UriInfo;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.jmx.rest.service.AggregateService;
 
-@Path("jmx/mbeans")
+@Path("jmx/aggregate")
 public class MBeans {
+    public static String AGGREGATE_ROOT = "jmx/mbeans";
+    
     /**
      * @param aggregateService
      */

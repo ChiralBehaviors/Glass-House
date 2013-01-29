@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.hellblazer.jmx.rest.domain.jaxb.jmx.OperationReturnValueJaxBean;
 import com.hellblazer.jmx.rest.service.JmxService;
 
-@Path("/mbean/{objectName}/operations/{operationName}")
+@Path("jmx/mbean/{objectName}/operations/{operationName}")
 public class MBeanObjectNameOperationsOperationName {
     public MBeanObjectNameOperationsOperationName(JmxService jmxService) {
         this.jmxService = jmxService;

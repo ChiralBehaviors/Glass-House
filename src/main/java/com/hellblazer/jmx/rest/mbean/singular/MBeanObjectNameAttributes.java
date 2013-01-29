@@ -36,7 +36,7 @@ import com.hellblazer.jmx.rest.service.JmxService;
  * 
  */
 
-@Path("/mbean/{objectName}/attributes")
+@Path("jmx/mbean/{objectName}/attributes")
 public class MBeanObjectNameAttributes {
 
     public MBeanObjectNameAttributes(JmxService jmxService) {
