@@ -2,10 +2,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.hellblazer</groupId>
-	<artifactId>jmx-rest</artifactId>
+	<artifactId>glass-house</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>JMX REST interface</name>
-	<description>A RESTful JMX interface</description>
+	<name>Glass House</name>
+	<description>REST based JMX Command and Control</description>
 	<dependencies>
 		<dependency>
 			<groupId>net.gescobar</groupId>
@@ -34,11 +34,11 @@
 			<artifactId>nexus</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-core</artifactId>
-            <version>0.6.1</version>
-        </dependency>
+		<dependency>
+			<groupId>com.yammer.dropwizard</groupId>
+			<artifactId>dropwizard-core</artifactId>
+			<version>0.6.1</version>
+		</dependency>
 	</dependencies>
 
 	<repositories>
@@ -79,7 +79,7 @@
 									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.hellblazer.jmx.HubService</mainClass>
+									<mainClass>com.hellblazer.glassHouse.HubService</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>
