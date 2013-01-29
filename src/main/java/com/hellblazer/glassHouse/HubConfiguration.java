@@ -17,7 +17,6 @@
 package com.hellblazer.glassHouse;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import javax.management.remote.JMXConnectorFactory;
@@ -40,7 +39,7 @@ public class HubConfiguration extends Configuration {
     /**
      * The Gossip configuration
      */
-    public GossipConfiguration gossip       = new GossipConfiguration();
+    public GossipConfiguration gossip          = new GossipConfiguration();
 
     /**
      * The JMX object name to register the cascading service
@@ -51,7 +50,7 @@ public class HubConfiguration extends Configuration {
      * The list of abstract service names corresponding to desired JMX adapter
      * services
      */
-    public List<String>        serviceNames = Collections.emptyList();
+    public Map<String, String> services        = Collections.emptyMap();
 
     /**
      * A Map object that will be passed to the
@@ -68,9 +67,9 @@ public class HubConfiguration extends Configuration {
     public String              sourcePattern;
 
     /**
-     * The <i>node name property</i> under which the source MBeans will be mounted in
-     * the target <tt>MBeanServer</tt>. This string may contain up to 2 %s
-     * patterns to accomidate the host and port of the remote MBeanServer.
+     * The <i>node name property</i> under which the source MBeans will be
+     * mounted in the target <tt>MBeanServer</tt>. This string may contain up to
+     * 2 %s patterns to accomidate the host and port of the remote MBeanServer.
      */
-    public String              nodeNamePattern   = "%s:%s";
+    public String              nodeNamePattern = "%s:%s";
 }

@@ -16,6 +16,9 @@
 
 package com.hellblazer.glassHouse.rest;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
 import com.yammer.metrics.core.HealthCheck;
 
 /**
@@ -23,12 +26,14 @@ import com.yammer.metrics.core.HealthCheck;
  * 
  */
 public class JmxHealthCheck extends HealthCheck {
+    private final MBeanServer mbs;
 
     /**
-     * @param name
+     * @param mbs
      */
-    public JmxHealthCheck() {
+    public JmxHealthCheck(MBeanServer mbs) {
         super("JMX Health Check");
+        this.mbs = mbs;
     }
 
     /* (non-Javadoc)
@@ -36,7 +41,12 @@ public class JmxHealthCheck extends HealthCheck {
      */
     @Override
     protected Result check() throws Exception {
-        return Result.healthy();
+        if (mbs.queryMBeans(ObjectName.getInstance(String.format("%s:*",
+                                                                 "JMImplementation")),
+                            null).size() > 0) {
+            return Result.healthy();
+        }
+        return Result.unhealthy("MBeanServer does not appear to be working");
     }
 
 }

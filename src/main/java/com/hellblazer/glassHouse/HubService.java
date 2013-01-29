@@ -18,6 +18,8 @@ package com.hellblazer.glassHouse;
 
 import static com.hellblazer.slp.ServiceScope.SERVICE_TYPE;
 
+import java.util.Map;
+
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
@@ -86,13 +88,13 @@ public class HubService extends Service<HubConfiguration> {
         scope.start();
         CascadingService cascadingService = new CascadingService();
         mbs.registerMBean(cascadingService, new ObjectName(configuration.name));
-        hub = new Hub(cascadingService, configuration.sourcePattern,
-                      configuration.sourceMap, scope,
+        hub = new Hub(cascadingService, configuration.sourceMap, scope,
                       configuration.nodeNamePattern);
-        for (String serviceType : configuration.serviceNames) {
-            hub.listenFor(String.format("(%s=%s)", SERVICE_TYPE, serviceType));
+        for (Map.Entry<String, String> entry : configuration.services.entrySet()) {
+            hub.listenFor(String.format("(%s=%s)", SERVICE_TYPE, entry.getKey()),
+                          entry.getValue());
         }
-        environment.addHealthCheck(new JmxHealthCheck());
+        environment.addHealthCheck(new JmxHealthCheck(mbs));
         JmxService jmxService = new JmxServiceImpl(mbs);
         AggregateService aggregateService = new AggregateServiceImpl(mbs);
 

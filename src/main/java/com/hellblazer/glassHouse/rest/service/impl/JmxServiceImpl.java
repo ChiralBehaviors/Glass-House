@@ -119,7 +119,7 @@ public class JmxServiceImpl implements JmxService {
         for (ObjectName name : mbs.queryNames(null, null)) {
             mBeanShortJaxBeans.add(new MBeanShortJaxBean(
                                                          uriInfo,
-                                                         name.getCanonicalKeyPropertyListString()));
+                                                         name.getCanonicalName()));
         }
         return new MBeanShortJaxBeans(mBeanShortJaxBeans);
     }

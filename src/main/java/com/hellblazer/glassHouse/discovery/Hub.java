@@ -20,6 +20,8 @@ import static com.hellblazer.slp.ServiceScope.SERVICE_TYPE;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,6 +32,7 @@ import javax.management.ObjectName;
 import javax.management.remote.JMXServiceURL;
 
 import net.gescobar.jmx.annotation.Impact;
+import net.gescobar.jmx.annotation.ManagedAttribute;
 import net.gescobar.jmx.annotation.ManagedOperation;
 
 import org.slf4j.Logger;
@@ -49,6 +52,11 @@ import com.hellblazer.slp.ServiceURL;
  */
 public class Hub {
     private class Listener implements ServiceListener {
+        private final ObjectName sourcePattern;
+
+        private Listener(ObjectName sourcePattern) {
+            this.sourcePattern = sourcePattern;
+        }
 
         /* (non-Javadoc)
          * @see com.hellblazer.slp.ServiceListener#serviceChanged(com.hellblazer.slp.ServiceEvent)
@@ -57,7 +65,7 @@ public class Hub {
         public void serviceChanged(ServiceEvent event) {
             switch (event.getType()) {
                 case REGISTERED: {
-                    registered(event.getReference());
+                    registered(event.getReference(), sourcePattern);
                     break;
                 }
                 case MODIFIED: {
@@ -73,38 +81,46 @@ public class Hub {
 
     }
 
-    public static final String                  CONFIG_YML    = "config.yml";
-    public static final String                  HOST          = "host";
-    public static final String                  TYPE          = "type";
-    public static final String                  TYPE_NAME     = MBeanServerConnection.class.getSimpleName();
-    public static final String                  URL           = "service.url";
+    public static final String                  CONFIG_YML         = "config.yml";
+    public static final String                  HOST               = "host";
+    public static final String                  TYPE               = "type";
+    public static final String                  TYPE_NAME          = MBeanServerConnection.class.getSimpleName();
+    public static final String                  URL                = "service.url";
 
-    private static Logger                       log           = LoggerFactory.getLogger(Hub.class);
+    private static Logger                       log                = LoggerFactory.getLogger(Hub.class);
 
-    private final Map<ServiceReference, String> registrations = new ConcurrentHashMap<ServiceReference, String>();
-    private final Listener                      listener      = new Listener();
-    private final ServiceScope                  scope;
     private final CascadingServiceMBean         cascadingService;
     private final String                        nameNodePattern;
-    private final ObjectName                    sourcePattern;
+    private final Map<String, String>           nodeNames          = new HashMap<>();
+    private final Map<String, Listener>         outstandingQueries = new HashMap<String, Hub.Listener>();
+    private final Map<ServiceReference, String> registrations      = new ConcurrentHashMap<ServiceReference, String>();
+    private final ServiceScope                  scope;
     private final Map<String, ?>                sourceMap;
 
-    public Hub(CascadingServiceMBean cascadingService, String sourcePattern,
+    public Hub(CascadingServiceMBean cascadingService,
                Map<String, ?> sourceMap, ServiceScope scope,
                String nodeNamePattern) throws MalformedObjectNameException {
         this.cascadingService = cascadingService;
-        this.sourcePattern = sourcePattern == null ? null
-                                                  : new ObjectName(
-                                                                   sourcePattern);
         this.sourceMap = sourceMap;
         this.scope = scope;
-        this.nameNodePattern = nodeNamePattern == null ? "%s:%s"
-                                                      : nodeNamePattern;
+        nameNodePattern = nodeNamePattern == null ? "%s:%s" : nodeNamePattern;
+    }
+
+    @ManagedAttribute(description = "The list of discovered nodes")
+    public String[] getNodes() {
+        Collection<String> values = nodeNames.values();
+        return values.toArray(new String[values.size()]);
     }
 
     @ManagedOperation(description = "Listen for JMX service URLs that match the service query", impact = Impact.ACTION)
-    public void listenFor(String query) throws InvalidSyntaxException {
-        log.info(String.format("Listening for %s", query));
+    public void listenFor(String query, String filter)
+                                                      throws InvalidSyntaxException,
+                                                      MalformedObjectNameException,
+                                                      NullPointerException {
+        ObjectName sourcePattern = ObjectName.getInstance(filter);
+        log.info(String.format("Listening for %s with filter %s", query, filter));
+        Listener listener = new Listener(sourcePattern);
+        outstandingQueries.put(query, listener);
         scope.addServiceListener(listener, query);
     }
 
@@ -113,16 +129,29 @@ public class Hub {
      * query filter expression.
      * 
      * @param serviceName
+     *            - the service name
+     * @param filter
+     *            - the filter used to select the mbeans on this service
      * @throws InvalidSyntaxException
+     * @throws NullPointerException
+     * @throws MalformedObjectNameException
      */
     @ManagedOperation(description = "Listen for JMX service URLs that match the abstract service name", impact = Impact.ACTION)
-    public void listenForService(String serviceName)
-                                                    throws InvalidSyntaxException {
-        listenFor(String.format("(%s=%s)", SERVICE_TYPE, serviceName));
+    public void listenForService(String serviceName, String filter)
+                                                                   throws InvalidSyntaxException,
+                                                                   MalformedObjectNameException,
+                                                                   NullPointerException {
+        listenFor(String.format("(%s=%s)", SERVICE_TYPE, serviceName), filter);
     }
 
-    @ManagedOperation(description = "Remove the registered query for JMX service URLs", impact = Impact.ACTION)
+    @ManagedOperation(description = "Remove the registered query", impact = Impact.ACTION)
     public void removeQuery(String query) throws InvalidSyntaxException {
+        Listener listener = outstandingQueries.remove(query);
+        if (listener == null) {
+            log.info(String.format("No listener registered for query '%s'",
+                                   query));
+            return;
+        }
         scope.removeServiceListener(listener, query);
     }
 
@@ -162,9 +191,11 @@ public class Hub {
 
     /**
      * @param reference
+     * @param sourcePattern
      * @throws IOException
      */
-    protected void registered(ServiceReference reference) {
+    protected void registered(ServiceReference reference,
+                              ObjectName sourcePattern) {
         assert reference != null;
         JMXServiceURL jmxServiceURL;
         try {
@@ -177,14 +208,15 @@ public class Hub {
         try {
             log.info(String.format("Registering MBeans for: %s:%s",
                                    url.getHost(), url.getPort()));
-            registrations.put(reference,
-                              cascadingService.mount(jmxServiceURL,
-                                                     sourceMap,
-                                                     sourcePattern,
-                                                     nameNodePattern == null ? null
-                                                                            : String.format(nameNodePattern,
-                                                                                            url.getHost(),
-                                                                                            url.getPort())));
+            String nodeName = nameNodePattern == null ? null
+                                                     : String.format(nameNodePattern,
+                                                                     url.getHost(),
+                                                                     url.getPort());
+            String mountPoint = cascadingService.mount(jmxServiceURL,
+                                                       sourceMap,
+                                                       sourcePattern, nodeName);
+            registrations.put(reference, mountPoint);
+            nodeNames.put(mountPoint, nodeName);
         } catch (InstanceAlreadyExistsException | IOException e) {
             log.info(String.format("Error registering MBeans for: %s:%s",
                                    url.getHost(), url.getPort()), e);
@@ -196,16 +228,17 @@ public class Hub {
      * @throws IOException
      */
     protected void unregistered(ServiceReference reference) {
-        String registration = registrations.remove(reference);
+        String mountPoint = registrations.remove(reference);
         ServiceURL url = reference.getUrl();
-        if (registration != null) {
+        if (mountPoint != null) {
+            nodeNames.remove(mountPoint);
             try {
                 log.info(String.format("Unregistering MBeans for: %s:%s",
                                        url.getHost(), url.getPort()));
-                cascadingService.unmount(registration);
+                cascadingService.unmount(mountPoint);
             } catch (IOException e) {
                 log.warn(String.format("Unable to unmount %s, mount point id %s",
-                                       reference, registration));
+                                       reference, mountPoint));
             }
         } else {
             log.warn(String.format("No cascading registration for %s",
