@@ -38,6 +38,7 @@ import net.gescobar.jmx.annotation.ManagedOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hellblazer.glassHouse.rest.service.impl.AggregateServiceImpl;
 import com.hellblazer.jmx.cascading.CascadingServiceMBean;
 import com.hellblazer.slp.InvalidSyntaxException;
 import com.hellblazer.slp.ServiceEvent;
@@ -90,20 +91,21 @@ public class Hub {
     private static Logger                       log                = LoggerFactory.getLogger(Hub.class);
 
     private final CascadingServiceMBean         cascadingService;
-    private final String                        nameNodePattern;
     private final Map<String, String>           nodeNames          = new HashMap<>();
     private final Map<String, Listener>         outstandingQueries = new HashMap<String, Hub.Listener>();
     private final Map<ServiceReference, String> registrations      = new ConcurrentHashMap<ServiceReference, String>();
     private final ServiceScope                  scope;
     private final Map<String, ?>                sourceMap;
+    private final AggregateServiceImpl          aggregateService;
 
     public Hub(CascadingServiceMBean cascadingService,
                Map<String, ?> sourceMap, ServiceScope scope,
-               String nodeNamePattern) throws MalformedObjectNameException {
+               AggregateServiceImpl aggregateService)
+                                                     throws MalformedObjectNameException {
         this.cascadingService = cascadingService;
         this.sourceMap = sourceMap;
         this.scope = scope;
-        nameNodePattern = nodeNamePattern == null ? "%s:%s" : nodeNamePattern;
+        this.aggregateService = aggregateService;
     }
 
     @ManagedAttribute(description = "The list of discovered nodes")
@@ -208,15 +210,15 @@ public class Hub {
         try {
             log.info(String.format("Registering MBeans for: %s:%s",
                                    url.getHost(), url.getPort()));
-            String nodeName = nameNodePattern == null ? null
-                                                     : String.format(nameNodePattern,
-                                                                     url.getHost(),
-                                                                     url.getPort());
+            String nodeName = String.format("%s\\:%s\\:%s",
+                                            url.getServiceType(),
+                                            url.getHost(), url.getPort());
             String mountPoint = cascadingService.mount(jmxServiceURL,
                                                        sourceMap,
                                                        sourcePattern, nodeName);
             registrations.put(reference, mountPoint);
             nodeNames.put(mountPoint, nodeName);
+            aggregateService.addNode(nodeName);
         } catch (InstanceAlreadyExistsException | IOException e) {
             log.info(String.format("Error registering MBeans for: %s:%s",
                                    url.getHost(), url.getPort()), e);
@@ -231,11 +233,12 @@ public class Hub {
         String mountPoint = registrations.remove(reference);
         ServiceURL url = reference.getUrl();
         if (mountPoint != null) {
-            nodeNames.remove(mountPoint);
+            String nodeName = nodeNames.remove(mountPoint);
             try {
                 log.info(String.format("Unregistering MBeans for: %s:%s",
                                        url.getHost(), url.getPort()));
                 cascadingService.unmount(mountPoint);
+                aggregateService.removeNode(nodeName);
             } catch (IOException e) {
                 log.warn(String.format("Unable to unmount %s, mount point id %s",
                                        reference, mountPoint));

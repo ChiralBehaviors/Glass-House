@@ -68,15 +68,12 @@ public class AggregateServiceImpl implements AggregateService {
      */
     public static QueryExp constructNodeQuery(Collection<String> jmxNodes)
                                                                           throws MalformedObjectNameException {
-        QueryExp nodeQuery = null;
+        QueryExp nodeQuery = Query.not(ObjectName.getInstance(String.format("%s:*",
+                                                                            "JMImplementation")));
         // Build up the query for all indicated nodes
         for (String jmxNode : jmxNodes) {
             QueryExp query = getNodeWildcardName(jmxNode);
-            if (nodeQuery == null) {
-                nodeQuery = query;
-            } else {
-                nodeQuery = Query.or(nodeQuery, query);
-            }
+            nodeQuery = Query.or(nodeQuery, query);
         }
         return nodeQuery;
     }
@@ -93,12 +90,79 @@ public class AggregateServiceImpl implements AggregateService {
                                                     jmxNode));
     }
 
+    /**
+     * @param nodeX
+     * @param sourceName
+     * @return
+     */
+    public static ObjectName stripNodeName(ObjectName sourceName) {
+        if (sourceName.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME) == null) {
+            return sourceName;
+        }
+        try {
+            final String domain = sourceName.getDomain();
+            final String list = sourceName.getKeyPropertyListString();
+            int index = list.indexOf(CascadingAgent.CASCADED_NODE_PROPERTY_NAME);
+            if (index == -1) {
+                throw new IllegalStateException(
+                                                String.format("Did not find the %s property in string scan of %s",
+                                                              CascadingAgent.CASCADED_NODE_PROPERTY_NAME,
+                                                              list));
+            }
+            String prefix = list.substring(0, index);
+            int suffixIndex = list.indexOf(',', index);
+            String suffix = "";
+            if (suffixIndex > 0) {
+                suffix = list.substring(suffixIndex + 1);
+            }
+
+            return ObjectName.getInstance(String.format("%s:%s%s", domain,
+                                                        prefix, suffix));
+        } catch (MalformedObjectNameException x) {
+            log.error(String.format("Cannot create wild card nod form of source name %s",
+                                    sourceName), x);
+            throw new IllegalStateException(
+                                            String.format("Cannot create wild card nod form of source name %s",
+                                                          sourceName), x);
+        }
+    }
+
+    /**
+     * @param nodeX
+     * @param sourceName
+     * @return
+     */
+    public static ObjectName wildcardNodeForm(ObjectName sourceName) {
+        try {
+            final String domain = sourceName.getDomain();
+            final String list = sourceName.getKeyPropertyListString();
+            final String targetName = String.format("%s:%s=*,%s",
+                                                    domain,
+                                                    CascadingAgent.CASCADED_NODE_PROPERTY_NAME,
+                                                    list);
+            return ObjectName.getInstance(targetName);
+        } catch (MalformedObjectNameException x) {
+            log.error(String.format("Cannot create wild card nod form of source name %s",
+                                    sourceName), x);
+            throw new IllegalStateException(
+                                            String.format("Cannot create wild card nod form of source name %s",
+                                                          sourceName), x);
+        }
+    }
+
     private final MBeanServer  mbeanServer;
 
     private final List<String> mBeanServerNodes = new CopyOnWriteArrayList<String>();
 
     public AggregateServiceImpl(MBeanServer mBeanServer) {
         mbeanServer = mBeanServer;
+    }
+
+    /**
+     * @param nodeName
+     */
+    public void addNode(String nodeName) {
+        mBeanServerNodes.remove(nodeName);
     }
 
     @Override
@@ -277,6 +341,13 @@ public class AggregateServiceImpl implements AggregateService {
         return new OperationReturnValueJaxBeans(operationReturnValueJaxBeans);
     }
 
+    /**
+     * @param nodeName
+     */
+    public void removeNode(String nodeName) {
+        mBeanServerNodes.add(nodeName);
+    }
+
     private MBeanAttributeValueJaxBean getAttributeValueFor(String attributeName,
                                                             ObjectName objectName) {
 
@@ -314,66 +385,6 @@ public class AggregateServiceImpl implements AggregateService {
             if (!nodeObjectNames.contains(objectName)) {
                 it.remove();
             }
-        }
-    }
-
-    /**
-     * @param nodeX
-     * @param sourceName
-     * @return
-     */
-    public static ObjectName wildcardNodeForm(ObjectName sourceName) {
-        try {
-            final String domain = sourceName.getDomain();
-            final String list = sourceName.getKeyPropertyListString();
-            final String targetName = String.format("%s:%s=*,%s",
-                                                    domain,
-                                                    CascadingAgent.CASCADED_NODE_PROPERTY_NAME,
-                                                    list);
-            return ObjectName.getInstance(targetName);
-        } catch (MalformedObjectNameException x) {
-            log.error(String.format("Cannot create wild card nod form of source name %s",
-                                    sourceName), x);
-            throw new IllegalStateException(
-                                            String.format("Cannot create wild card nod form of source name %s",
-                                                          sourceName), x);
-        }
-    }
-
-    /**
-     * @param nodeX
-     * @param sourceName
-     * @return
-     */
-    public static ObjectName stripNodeName(ObjectName sourceName) {
-        if (sourceName.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME) == null) {
-            return sourceName;
-        }
-        try {
-            final String domain = sourceName.getDomain();
-            final String list = sourceName.getKeyPropertyListString();
-            int index = list.indexOf(CascadingAgent.CASCADED_NODE_PROPERTY_NAME);
-            if (index == -1) {
-                throw new IllegalStateException(
-                                                String.format("Did not find the %s property in string scan of %s",
-                                                              CascadingAgent.CASCADED_NODE_PROPERTY_NAME,
-                                                              list));
-            }
-            String prefix = list.substring(0, index);
-            int suffixIndex = list.indexOf(',', index);
-            String suffix = "";
-            if (suffixIndex > 0) {
-                suffix = list.substring(suffixIndex + 1);
-            }
-
-            return ObjectName.getInstance(String.format("%s:%s%s", domain,
-                                                        prefix, suffix));
-        } catch (MalformedObjectNameException x) {
-            log.error(String.format("Cannot create wild card nod form of source name %s",
-                                    sourceName), x);
-            throw new IllegalStateException(
-                                            String.format("Cannot create wild card nod form of source name %s",
-                                                          sourceName), x);
         }
     }
 }

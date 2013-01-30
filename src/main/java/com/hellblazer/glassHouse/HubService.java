@@ -18,6 +18,7 @@ package com.hellblazer.glassHouse;
 
 import static com.hellblazer.slp.ServiceScope.SERVICE_TYPE;
 
+import java.lang.management.ManagementFactory;
 import java.util.Map;
 
 import javax.management.MBeanServer;
@@ -36,7 +37,6 @@ import com.hellblazer.glassHouse.rest.mbean.singular.MBeanObjectName;
 import com.hellblazer.glassHouse.rest.mbean.singular.MBeanObjectNameAttributes;
 import com.hellblazer.glassHouse.rest.mbean.singular.MBeanObjectNameAttributesAttributeName;
 import com.hellblazer.glassHouse.rest.mbean.singular.MBeanObjectNameOperationsOperationName;
-import com.hellblazer.glassHouse.rest.service.AggregateService;
 import com.hellblazer.glassHouse.rest.service.JmxService;
 import com.hellblazer.glassHouse.rest.service.impl.AggregateServiceImpl;
 import com.hellblazer.glassHouse.rest.service.impl.JmxServiceImpl;
@@ -87,16 +87,18 @@ public class HubService extends Service<HubConfiguration> {
         GossipScope scope = new GossipScope(configuration.gossip.construct());
         scope.start();
         CascadingService cascadingService = new CascadingService();
-        mbs.registerMBean(cascadingService, new ObjectName(configuration.name));
+        ManagementFactory.getPlatformMBeanServer().registerMBean(cascadingService,
+                                                                 new ObjectName(
+                                                                                configuration.cascadingServiceName));
+        AggregateServiceImpl aggregateService = new AggregateServiceImpl(mbs);
         hub = new Hub(cascadingService, configuration.sourceMap, scope,
-                      configuration.nodeNamePattern);
+                      aggregateService);
         for (Map.Entry<String, String> entry : configuration.services.entrySet()) {
             hub.listenFor(String.format("(%s=%s)", SERVICE_TYPE, entry.getKey()),
                           entry.getValue());
         }
         environment.addHealthCheck(new JmxHealthCheck(mbs));
         JmxService jmxService = new JmxServiceImpl(mbs);
-        AggregateService aggregateService = new AggregateServiceImpl(mbs);
 
         environment.addResource(Index.class);
         environment.addResource(Nodes.class);

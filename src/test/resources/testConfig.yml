@@ -1,4 +1,4 @@
-name: "hellblazer:type=cnc"
+cascadingServiceName: "hellblazer:type=cnc"
 gossip:
     seeds: 
         - localhost:6754

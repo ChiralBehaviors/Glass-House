@@ -19,6 +19,7 @@ package com.hellblazer.glassHouse;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.management.ObjectName;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
@@ -32,7 +33,7 @@ import com.yammer.dropwizard.config.Configuration;
 public class HubConfiguration extends Configuration {
 
     /**
-     * The domain name for the JMX MBeanServer
+     * The default domain name for the JMX MBeanServer managed by the hub
      */
     public String              domainName;
 
@@ -42,13 +43,30 @@ public class HubConfiguration extends Configuration {
     public GossipConfiguration gossip          = new GossipConfiguration();
 
     /**
-     * The JMX object name to register the cascading service
+     * The JMX object name to register the hub service
      */
-    public String              name;
+    public String              hubName;
 
     /**
-     * The list of abstract service names corresponding to desired JMX adapter
-     * services
+     * The JMX object name to register the cascading service
+     */
+    public String              cascadingServiceName;
+
+    /**
+     * The map of abstract service names to jmx filter patterns. The keys
+     * represent the abstract services that the hub will listen for. When an
+     * instance of the service is discovered, the MBeans on the corresponding
+     * MBean {@link ObjectName} pattern will be proxied into the hub.
+     * <p>
+     * for example:
+     * 
+     * <pre>
+     *     daemon.jmx.* -> "*:*"
+     *        when a "daemon.jmx.rmi://foo.com:5676 service is discovered,
+     *        all the MBeans will be proxied
+     *     app1.jmx.rmi -> "appServer:*"
+     *        only the MBeans in the domain "appServer" will be proxied
+     * </pre>
      */
     public Map<String, String> services        = Collections.emptyMap();
 
@@ -58,18 +76,4 @@ public class HubConfiguration extends Configuration {
      * to connect to the source <tt>MBeanServer</tt>.
      */
     public Map<String, ?>      sourceMap;
-
-    /**
-     * An <tt>ObjectName</tt> pattern that must be satisfied by the
-     * <tt>ObjectName</tt>s of the source MBeans. A null sourcePattern is
-     * equivalent to *:*
-     */
-    public String              sourcePattern;
-
-    /**
-     * The <i>node name property</i> under which the source MBeans will be
-     * mounted in the target <tt>MBeanServer</tt>. This string may contain up to
-     * 2 %s patterns to accomidate the host and port of the remote MBeanServer.
-     */
-    public String              nodeNamePattern = "%s:%s";
 }

@@ -23,6 +23,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
@@ -49,11 +51,11 @@ public class MBeanObjectName {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public MBeanJaxBean getOperations(@PathParam("objectName") String objectName)
-                                                                                 throws MalformedObjectNameException,
-                                                                                 IntrospectionException,
-                                                                                 NullPointerException,
-                                                                                 ReflectionException {
+    public Response getOperations(@PathParam("objectName") String objectName)
+                                                                             throws MalformedObjectNameException,
+                                                                             IntrospectionException,
+                                                                             NullPointerException,
+                                                                             ReflectionException {
         MBeanAttributeJaxBeans mBeanAttributesJaxBean;
         MBeanOperationJaxBeans mBeanOperationsJaxBean;
         try {
@@ -62,11 +64,13 @@ public class MBeanObjectName {
             mBeanOperationsJaxBean = jmxService.getOperationsMetaData(uriInfo,
                                                                       objectName);
         } catch (InstanceNotFoundException e) {
-            log.info("getOperations: ", e);
-            return MBeanJaxBean.EMPTY_MBEAN_JAX_BEAN;
+            if (log.isDebugEnabled()) {
+                log.debug("getOperations: ", e);
+            }
+            return Response.status(Status.NOT_FOUND).entity(MBeanJaxBean.EMPTY_MBEAN_JAX_BEAN).build();
         }
-        return new MBeanJaxBean(objectName, mBeanOperationsJaxBean,
-                                mBeanAttributesJaxBean);
+        return Response.ok(new MBeanJaxBean(objectName, mBeanOperationsJaxBean,
+                                            mBeanAttributesJaxBean)).build();
     }
 
 }

@@ -28,6 +28,8 @@ import javax.management.MBeanOperationInfo;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.Query;
+import javax.management.QueryExp;
 import javax.management.ReflectionException;
 import javax.ws.rs.core.UriInfo;
 
@@ -116,7 +118,15 @@ public class JmxServiceImpl implements JmxService {
     @Override
     public MBeanShortJaxBeans getMBeanShortJaxBeans(UriInfo uriInfo) {
         Set<MBeanShortJaxBean> mBeanShortJaxBeans = new TreeSet<MBeanShortJaxBean>();
-        for (ObjectName name : mbs.queryNames(null, null)) {
+        QueryExp query;
+        try {
+            query = Query.not(ObjectName.getInstance(String.format("%s:*",
+                                                                   "JMImplementation")));
+        } catch (MalformedObjectNameException | NullPointerException e) {
+            throw new IllegalStateException(
+                                            "Cannot create query to exclude JMImplementation");
+        }
+        for (ObjectName name : mbs.queryNames(null, query)) {
             mBeanShortJaxBeans.add(new MBeanShortJaxBean(
                                                          uriInfo,
                                                          name.getCanonicalName()));
@@ -194,9 +204,11 @@ public class JmxServiceImpl implements JmxService {
                 | ReflectionException | InstanceNotFoundException e) {
             exception = e.toString();
         }
-        return new MBeanAttributeValueJaxBean(
-                                              attributeName,
-                                              n.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME),
+        String nodeName = n.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME);
+        if (nodeName == null) {
+            nodeName = "";
+        }
+        return new MBeanAttributeValueJaxBean(attributeName, nodeName,
                                               n.getCanonicalName(), value,
                                               exception);
     }
