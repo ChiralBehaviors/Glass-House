@@ -43,7 +43,10 @@ public interface AggregateService {
                                                         Collection<String> jmxNodes,
                                                         String objectName)
                                                                           throws InstanceNotFoundException,
-                                                                          MalformedObjectNameException, IntrospectionException, NullPointerException, ReflectionException;
+                                                                          MalformedObjectNameException,
+                                                                          IntrospectionException,
+                                                                          NullPointerException,
+                                                                          ReflectionException;
 
     public MBeanAttributeValueJaxBeans getAttributeValues(Collection<String> jmxNodes,
                                                           String objectName,
@@ -61,13 +64,19 @@ public interface AggregateService {
 
     public MBeanOperationJaxBeans getOperationsMetaData(UriInfo uriInfo,
                                                         Collection<String> jmxNodes,
-                                                        String objectName) throws MalformedObjectNameException, NullPointerException, IntrospectionException, InstanceNotFoundException, ReflectionException;
+                                                        String objectName)
+                                                                          throws MalformedObjectNameException,
+                                                                          NullPointerException,
+                                                                          IntrospectionException,
+                                                                          InstanceNotFoundException,
+                                                                          ReflectionException;
 
     public OperationReturnValueJaxBeans invokeOperation(Collection<String> jmxNodes,
                                                         String objectName,
                                                         String operationName)
                                                                              throws MalformedObjectNameException,
-                                                                             NullPointerException;
+                                                                             NullPointerException,
+                                                                             InstanceNotFoundException;
 
     public OperationReturnValueJaxBeans invokeOperation(Collection<String> jmxNodes,
                                                         String objectName,
@@ -75,5 +84,6 @@ public interface AggregateService {
                                                         Object[] params,
                                                         String[] signature)
                                                                            throws MalformedObjectNameException,
-                                                                           NullPointerException;
+                                                                           NullPointerException,
+                                                                           InstanceNotFoundException;
 }

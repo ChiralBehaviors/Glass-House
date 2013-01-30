@@ -160,7 +160,8 @@ public class JmxServiceImpl implements JmxService {
     public OperationReturnValueJaxBean invokeOperation(String objectName,
                                                        String operationName)
                                                                             throws MalformedObjectNameException,
-                                                                            NullPointerException {
+                                                                            NullPointerException,
+                                                                            InstanceNotFoundException {
         return invokeOperation(objectName, operationName, new Object[] {},
                                new String[] {});
     }
@@ -174,14 +175,14 @@ public class JmxServiceImpl implements JmxService {
                                                        Object[] params,
                                                        String[] signature)
                                                                           throws MalformedObjectNameException,
-                                                                          NullPointerException {
+                                                                          NullPointerException,
+                                                                          InstanceNotFoundException {
         ObjectName n = ObjectName.getInstance(objectName);
         Object returnValue = null;
         String exception = null;
         try {
             returnValue = mbs.invoke(n, operationName, params, signature);
-        } catch (ReflectionException | MBeanException
-                | InstanceNotFoundException e) {
+        } catch (ReflectionException | MBeanException e) {
             exception = e.toString();
         }
         return new OperationReturnValueJaxBean(

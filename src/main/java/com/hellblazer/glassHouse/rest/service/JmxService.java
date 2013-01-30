@@ -18,6 +18,7 @@ package com.hellblazer.glassHouse.rest.service;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
+import javax.management.MBeanException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ReflectionException;
 import javax.ws.rs.core.UriInfo;
@@ -98,11 +99,15 @@ public interface JmxService {
      * @return
      * @throws NullPointerException
      * @throws MalformedObjectNameException
+     * @throws MBeanException
+     * @throws ReflectionException
+     * @throws InstanceNotFoundException
      */
     OperationReturnValueJaxBean invokeOperation(String objectName,
                                                 String operationName)
                                                                      throws MalformedObjectNameException,
-                                                                     NullPointerException;
+                                                                     NullPointerException,
+                                                                     InstanceNotFoundException;
 
     /**
      * @param objectName
@@ -112,13 +117,17 @@ public interface JmxService {
      * @return
      * @throws NullPointerException
      * @throws MalformedObjectNameException
+     * @throws MBeanException
+     * @throws ReflectionException
+     * @throws InstanceNotFoundException
      */
     OperationReturnValueJaxBean invokeOperation(String objectName,
                                                 String operationName,
                                                 Object[] paramArray,
                                                 String[] signatureArray)
                                                                         throws MalformedObjectNameException,
-                                                                        NullPointerException;
+                                                                        NullPointerException,
+                                                                        InstanceNotFoundException;
 
     /**
      * @param objectName

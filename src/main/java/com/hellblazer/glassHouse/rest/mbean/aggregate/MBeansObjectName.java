@@ -75,6 +75,9 @@ public class MBeansObjectName {
             mBeanAttributesJaxBean = aggregateService.getAttributesMetaData(uriInfo,
                                                                             jmxNodes,
                                                                             objectName);
+            if (mBeanAttributesJaxBean.mBeanAttributeJaxBeans.size() == 0) {
+                throw new InstanceNotFoundException(objectName);
+            }
             mBeanOperationsJaxBean = aggregateService.getOperationsMetaData(uriInfo,
                                                                             jmxNodes,
                                                                             objectName);

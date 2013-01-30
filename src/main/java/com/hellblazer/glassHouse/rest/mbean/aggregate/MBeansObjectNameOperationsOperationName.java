@@ -30,6 +30,7 @@ package com.hellblazer.glassHouse.rest.mbean.aggregate;
 
 import java.util.Collection;
 
+import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -72,6 +73,10 @@ public class MBeansObjectNameOperationsOperationName {
             return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
                                                                                "Invalid Object name",
                                                                                objectName)).build();
+        } catch (InstanceNotFoundException e) {
+            return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
+                                                                               "Unkown Object",
+                                                                               objectName)).build();
         }
     }
 
@@ -98,6 +103,10 @@ public class MBeansObjectNameOperationsOperationName {
             return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
                                                                                "Invalid Object name",
                                                                                objectName)).build();
+        } catch (InstanceNotFoundException e) {
+            return Response.status(Status.NOT_FOUND).entity(new ErrorJaxBean(
+                                                                             "Unkown Object",
+                                                                             objectName)).build();
         }
     }
 

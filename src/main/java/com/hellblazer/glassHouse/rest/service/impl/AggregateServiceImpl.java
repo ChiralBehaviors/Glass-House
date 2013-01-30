@@ -195,7 +195,11 @@ public class AggregateServiceImpl implements AggregateService {
                                                                           ReflectionException {
         Set<MBeanAttributeJaxBean> mBeanAttributeJaxBeans = new TreeSet<MBeanAttributeJaxBean>();
 
-        for (ObjectName n : queryObjectNames(jmxNodes, objectName)) {
+        Set<ObjectName> names = queryObjectNames(jmxNodes, objectName);
+        if (names.size() == 0) {
+            throw new InstanceNotFoundException(objectName);
+        }
+        for (ObjectName n : names) {
             for (MBeanAttributeInfo info : mbeanServer.getMBeanInfo(n).getAttributes()) {
                 mBeanAttributeJaxBeans.add(new MBeanAttributeJaxBean(uriInfo,
                                                                      info));
@@ -292,7 +296,11 @@ public class AggregateServiceImpl implements AggregateService {
                                                                           ReflectionException {
         Set<MBeanOperationJaxBean> mBeanOperationJaxBeans = new TreeSet<MBeanOperationJaxBean>();
 
-        for (ObjectName n : queryObjectNames(jmxNodes, objectName)) {
+        Set<ObjectName> names = queryObjectNames(jmxNodes, objectName);
+        if (names.size() == 0) {
+            throw new InstanceNotFoundException(objectName);
+        }
+        for (ObjectName n : names) {
             for (MBeanOperationInfo info : mbeanServer.getMBeanInfo(n).getOperations()) {
                 mBeanOperationJaxBeans.add(new MBeanOperationJaxBean(uriInfo,
                                                                      info));
@@ -307,7 +315,8 @@ public class AggregateServiceImpl implements AggregateService {
                                                         String objectName,
                                                         String operationName)
                                                                              throws MalformedObjectNameException,
-                                                                             NullPointerException {
+                                                                             NullPointerException,
+                                                                             InstanceNotFoundException {
         return invokeOperation(jmxNodes, objectName, operationName,
                                new Object[] {}, new String[] {});
     }
@@ -319,10 +328,15 @@ public class AggregateServiceImpl implements AggregateService {
                                                         Object[] params,
                                                         String[] signature)
                                                                            throws MalformedObjectNameException,
-                                                                           NullPointerException {
+                                                                           NullPointerException,
+                                                                           InstanceNotFoundException {
         Set<OperationReturnValueJaxBean> operationReturnValueJaxBeans = new TreeSet<OperationReturnValueJaxBean>();
 
-        for (ObjectName n : queryObjectNames(jmxNodes, objectName)) {
+        Set<ObjectName> names = queryObjectNames(jmxNodes, objectName);
+        if (names.size() == 0) {
+            throw new InstanceNotFoundException(objectName);
+        }
+        for (ObjectName n : names) {
             Object returnValue = null;
             String exception = null;
             try {

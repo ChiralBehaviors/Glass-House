@@ -215,7 +215,7 @@ public class JmxServiceFunctionalTest {
 
         MBeanShortJaxBeans mBeanShortJaxBeans = jmxService.getMBeanShortJaxBeans(uriInfo);
 
-        assertEquals("Expected to get two common mBeanShortJaxBeans", 3,
+        assertEquals("Expected to get two common mBeanShortJaxBeans", 2,
                      mBeanShortJaxBeans.mbeans.size());
     }
 

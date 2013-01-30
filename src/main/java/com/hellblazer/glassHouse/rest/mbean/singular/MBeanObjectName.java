@@ -53,6 +53,9 @@ public class MBeanObjectName {
         try {
             mBeanAttributesJaxBean = jmxService.getAttributesMetaData(uriInfo,
                                                                       objectName);
+            if (mBeanAttributesJaxBean.mBeanAttributeJaxBeans.size() == 0) {
+                throw new InstanceNotFoundException(objectName);
+            }
             mBeanOperationsJaxBean = jmxService.getOperationsMetaData(uriInfo,
                                                                       objectName);
         } catch (InstanceNotFoundException e) {
