@@ -26,9 +26,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBeans;
+import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.JmxService;
 
 /**
@@ -50,12 +52,21 @@ public class MBeanObjectNameAttributes {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public MBeanAttributeValueJaxBeans getAttribute(@PathParam("objectName") String objectName)
-                                                                                               throws MalformedObjectNameException,
-                                                                                               IntrospectionException,
-                                                                                               InstanceNotFoundException,
-                                                                                               NullPointerException,
-                                                                                               ReflectionException {
-        return jmxService.getAllAttributeValues(objectName);
+    public Response getAttribute(@PathParam("objectName") String objectName) {
+        try {
+            return Response.ok(jmxService.getAllAttributeValues(objectName)).build();
+        } catch (InstanceNotFoundException e) {
+            return Response.status(Status.NOT_FOUND).entity(new ErrorJaxBean(
+                                                                             "Object not found",
+                                                                             objectName)).build();
+        } catch (MalformedObjectNameException | NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
+                                                                               "Invalid Object name",
+                                                                               objectName)).build();
+        } catch (IntrospectionException | ReflectionException e) {
+            throw new IllegalStateException(
+                                            String.format("Unexpected exception retrieving attributes for %s",
+                                                          objectName), e);
+        }
     }
 }

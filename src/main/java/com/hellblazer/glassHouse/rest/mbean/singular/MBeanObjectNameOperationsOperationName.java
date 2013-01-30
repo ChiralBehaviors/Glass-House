@@ -22,11 +22,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.OperationReturnValueJaxBean;
+import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.JmxService;
 
 @Path("jmx/mbean/{objectName}/operations/{operationName}")
@@ -41,30 +43,41 @@ public class MBeanObjectNameOperationsOperationName {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public OperationReturnValueJaxBean invokeOperation(@PathParam("objectName") String objectName,
-                                                       @PathParam("operationName") String operationName)
-                                                                                                        throws MalformedObjectNameException,
-                                                                                                        NullPointerException {
+    public Response invokeOperation(@PathParam("objectName") String objectName,
+                                    @PathParam("operationName") String operationName) {
         log.info("invokeOperationWithParameters: " + operationName);
 
-        return jmxService.invokeOperation(objectName, operationName);
+        try {
+            return Response.ok(jmxService.invokeOperation(objectName,
+                                                          operationName)).build();
+        } catch (MalformedObjectNameException | NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
+                                                                               "Invalid Object name",
+                                                                               objectName)).build();
+        }
     }
 
     @GET
     @Path("/{params}/{signature}")
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public OperationReturnValueJaxBean invokeOperationWithParameters(@PathParam("objectName") String objectName,
-                                                                     @PathParam("operationName") String operationName,
-                                                                     @PathParam("params") String params,
-                                                                     @PathParam("signature") String signature)
-                                                                                                              throws MalformedObjectNameException,
-                                                                                                              NullPointerException {
+    public Response invokeOperationWithParameters(@PathParam("objectName") String objectName,
+                                                  @PathParam("operationName") String operationName,
+                                                  @PathParam("params") String params,
+                                                  @PathParam("signature") String signature) {
         log.info("invokeOperationWithParameters: " + operationName);
 
         String[] paramArray = params.split(",");
         String[] signatureArray = signature.split(",");
-        return jmxService.invokeOperation(objectName, operationName,
-                                          paramArray, signatureArray);
+        try {
+            return Response.ok(jmxService.invokeOperation(objectName,
+                                                          operationName,
+                                                          paramArray,
+                                                          signatureArray)).build();
+        } catch (MalformedObjectNameException | NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
+                                                                               "Invalid Object name",
+                                                                               objectName)).build();
+        }
     }
 
 }

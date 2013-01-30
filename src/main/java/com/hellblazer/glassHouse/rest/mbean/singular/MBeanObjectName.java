@@ -27,18 +27,14 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
-import com.hellblazer.glassHouse.rest.mbean.aggregate.MBeansObjectNameAttributes;
 import com.hellblazer.glassHouse.rest.service.JmxService;
 
 @Path("jmx/mbean/{objectName}")
 public class MBeanObjectName {
-    private static Logger    log = LoggerFactory.getLogger(MBeansObjectNameAttributes.class);
 
     private final JmxService jmxService;
 
@@ -51,11 +47,7 @@ public class MBeanObjectName {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public Response getOperations(@PathParam("objectName") String objectName)
-                                                                             throws MalformedObjectNameException,
-                                                                             IntrospectionException,
-                                                                             NullPointerException,
-                                                                             ReflectionException {
+    public Response getOperations(@PathParam("objectName") String objectName) {
         MBeanAttributeJaxBeans mBeanAttributesJaxBean;
         MBeanOperationJaxBeans mBeanOperationsJaxBean;
         try {
@@ -64,10 +56,17 @@ public class MBeanObjectName {
             mBeanOperationsJaxBean = jmxService.getOperationsMetaData(uriInfo,
                                                                       objectName);
         } catch (InstanceNotFoundException e) {
-            if (log.isDebugEnabled()) {
-                log.debug("getOperations: ", e);
-            }
-            return Response.status(Status.NOT_FOUND).entity(MBeanJaxBean.EMPTY_MBEAN_JAX_BEAN).build();
+            return Response.status(Status.NOT_FOUND).entity(new ErrorJaxBean(
+                                                                             "Object not found",
+                                                                             objectName)).build();
+        } catch (MalformedObjectNameException | NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
+                                                                               "Invalid Object name",
+                                                                               objectName)).build();
+        } catch (IntrospectionException | ReflectionException e) {
+            throw new IllegalStateException(
+                                            String.format("Unexpected exception retrieving operations for %s",
+                                                          objectName), e);
         }
         return Response.ok(new MBeanJaxBean(objectName, mBeanOperationsJaxBean,
                                             mBeanAttributesJaxBean)).build();

@@ -23,9 +23,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBean;
+import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.JmxService;
 
 @Path("jmx/mbean/{objectName}/attributes/{attributeName}")
@@ -42,10 +44,16 @@ public class MBeanObjectNameAttributesAttributeName {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public MBeanAttributeValueJaxBean getAttribute(@PathParam("objectName") String objectName,
-                                                   @PathParam("attributeName") String attributeName)
-                                                                                                    throws MalformedObjectNameException {
-        return jmxService.getAttributeValue(objectName, attributeName);
+    public Response getAttribute(@PathParam("objectName") String objectName,
+                                 @PathParam("attributeName") String attributeName) {
+        try {
+            return Response.ok(jmxService.getAttributeValue(objectName,
+                                                            attributeName)).build();
+        } catch (MalformedObjectNameException | NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
+                                                                               "Invalid Object name",
+                                                                               objectName)).build();
+        }
     }
 
 }

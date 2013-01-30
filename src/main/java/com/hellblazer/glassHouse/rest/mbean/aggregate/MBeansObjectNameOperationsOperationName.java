@@ -37,11 +37,13 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
+import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
 
 @Path("jmx/aggregate/{objectName}/operations/{operationName}")
@@ -56,36 +58,47 @@ public class MBeansObjectNameOperationsOperationName {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public OperationReturnValueJaxBeans invokeOperation(@PathParam("objectName") String objectName,
-                                                        @PathParam("operationName") String operationName,
-                                                        @QueryParam("nodes") String nodes)
-                                                                                          throws MalformedObjectNameException,
-                                                                                          NullPointerException {
+    public Response invokeOperation(@PathParam("objectName") String objectName,
+                                    @PathParam("operationName") String operationName,
+                                    @QueryParam("nodes") String nodes) {
         log.info("invokeOperationWithParameters: " + operationName);
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
-        return aggregateService.invokeOperation(jmxNodes, objectName,
-                                                operationName);
+        try {
+            return Response.ok(aggregateService.invokeOperation(jmxNodes,
+                                                                objectName,
+                                                                operationName)).build();
+        } catch (MalformedObjectNameException | NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
+                                                                               "Invalid Object name",
+                                                                               objectName)).build();
+        }
     }
 
     @GET
     @Path("/{params}/{signature}")
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public OperationReturnValueJaxBeans invokeOperationWithParameters(@PathParam("objectName") String objectName,
-                                                                      @PathParam("operationName") String operationName,
-                                                                      @PathParam("params") String params,
-                                                                      @PathParam("signature") String signature,
-                                                                      @QueryParam("nodes") String nodes)
-                                                                                                        throws MalformedObjectNameException,
-                                                                                                        NullPointerException {
+    public Response invokeOperationWithParameters(@PathParam("objectName") String objectName,
+                                                  @PathParam("operationName") String operationName,
+                                                  @PathParam("params") String params,
+                                                  @PathParam("signature") String signature,
+                                                  @QueryParam("nodes") String nodes) {
         log.info("invokeOperationWithParameters: " + operationName);
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
         String[] paramArray = params.split(",");
         String[] signatureArray = signature.split(",");
-        return aggregateService.invokeOperation(jmxNodes, objectName,
-                                                operationName, paramArray,
-                                                signatureArray);
+        try {
+            return Response.ok(aggregateService.invokeOperation(jmxNodes,
+                                                                objectName,
+                                                                operationName,
+                                                                paramArray,
+                                                                signatureArray)).build();
+        } catch (MalformedObjectNameException | NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
+                                                                               "Invalid Object name",
+                                                                               objectName)).build();
+        }
     }
 
 }

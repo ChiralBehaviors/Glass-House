@@ -38,9 +38,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanAttributeValueJaxBeans;
+import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
 
 @Path("jmx/aggregate/{objectName}/attributes/{attributeName}")
@@ -57,13 +59,19 @@ public class MBeansObjectNameAttributesAttributeName {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public MBeanAttributeValueJaxBeans getAttribute(@PathParam("objectName") String objectName,
-                                                    @PathParam("attributeName") String attributeName,
-                                                    @QueryParam("nodes") String nodes)
-                                                                                      throws MalformedObjectNameException {
+    public Response getAttribute(@PathParam("objectName") String objectName,
+                                 @PathParam("attributeName") String attributeName,
+                                 @QueryParam("nodes") String nodes) {
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
-        return aggregateService.getAttributeValues(jmxNodes, objectName,
-                                                   attributeName);
+        try {
+            return Response.ok(aggregateService.getAttributeValues(jmxNodes,
+                                                                   objectName,
+                                                                   attributeName)).build();
+        } catch (MalformedObjectNameException | NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
+                                                                               "Invalid Object name",
+                                                                               objectName)).build();
+        }
     }
 
 }

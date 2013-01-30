@@ -45,6 +45,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
@@ -65,11 +66,7 @@ public class MBeansObjectName {
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response getOperations(@PathParam("objectName") String objectName,
-                                  @QueryParam("nodes") String nodes)
-                                                                    throws MalformedObjectNameException,
-                                                                    IntrospectionException,
-                                                                    NullPointerException,
-                                                                    ReflectionException {
+                                  @QueryParam("nodes") String nodes) {
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
         MBeanAttributeJaxBeans mBeanAttributesJaxBean;
@@ -81,11 +78,21 @@ public class MBeansObjectName {
             mBeanOperationsJaxBean = aggregateService.getOperationsMetaData(uriInfo,
                                                                             jmxNodes,
                                                                             objectName);
+            return Response.ok(new MBeanJaxBean(objectName,
+                                                mBeanOperationsJaxBean,
+                                                mBeanAttributesJaxBean)).build();
         } catch (InstanceNotFoundException e) {
-            return Response.status(Status.NOT_FOUND).entity(MBeanJaxBean.EMPTY_MBEAN_JAX_BEAN).build();
+            return Response.status(Status.NOT_FOUND).entity(new ErrorJaxBean(
+                                                                             "Object not found",
+                                                                             objectName)).build();
+        } catch (MalformedObjectNameException | NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(new ErrorJaxBean(
+                                                                               "Invalid Object name",
+                                                                               objectName)).build();
+        } catch (IntrospectionException | ReflectionException e) {
+            throw new IllegalStateException(
+                                            String.format("Unexpected exception retrieving operations for %s",
+                                                          objectName, nodes), e);
         }
-        return Response.ok(new MBeanJaxBean(objectName, mBeanOperationsJaxBean,
-                                            mBeanAttributesJaxBean)).build();
     }
-
 }
