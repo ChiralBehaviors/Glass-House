@@ -2,10 +2,16 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.hellblazer</groupId>
-	<artifactId>glass-house</artifactId>
+	<artifactId>glass-house.app</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Glass House</name>
-	<description>REST based JMX Command and Control</description>
+	<name>Glass House Application</name>
+	<description>Glass House umbrella app</description>
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>framework</module>
+		<module>demo</module>
+	</modules>
 
 	<licenses>
 		<license>
@@ -41,80 +47,9 @@
 			<url>http://repository.elibom.net/nexus/content/repositories/releases</url>
 		</repository>
 	</repositories>
-	
-	<dependencies>
-		<dependency>
-			<groupId>net.gescobar</groupId>
-			<artifactId>jmx-annotations</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.10</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.9.0</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.hellblazer</groupId>
-			<artifactId>cascading-jmx</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.hellblazer</groupId>
-			<artifactId>nexus</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.yammer.dropwizard</groupId>
-			<artifactId>dropwizard-core</artifactId>
-			<version>0.6.1</version>
-		</dependency>
-	</dependencies>
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>1.4</version>
-				<configuration>
-					<createDependencyReducedPom>true</createDependencyReducedPom>
-					<filters>
-						<filter>
-							<artifact>*:*</artifact>
-							<excludes>
-								<exclude>META-INF/*.SF</exclude>
-								<exclude>META-INF/*.DSA</exclude>
-								<exclude>META-INF/*.RSA</exclude>
-							</excludes>
-						</filter>
-					</filters>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.hellblazer.glassHouse.HubService</mainClass>
-								</transformer>
-							</transformers>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -126,4 +61,11 @@
 			</plugin>
 		</plugins>
 	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.hellblazer</groupId>
+			<artifactId>nexus</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+	</dependencies>
 </project>
