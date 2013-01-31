@@ -1,3 +1,6 @@
+http:
+  rootPath: /service/*
+  
 cascadingServiceName: "hellblazer:type=cnc"
 gossip:
     seeds: 

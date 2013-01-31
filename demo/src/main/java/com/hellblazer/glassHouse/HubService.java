@@ -46,6 +46,7 @@ import com.hellblazer.gossip.configuration.YamlHelper;
 import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.nexus.GossipScope;
 import com.yammer.dropwizard.Service;
+import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 
@@ -71,6 +72,8 @@ public class HubService extends Service<HubConfiguration> {
     @Override
     public void initialize(Bootstrap<HubConfiguration> bootstrap) {
         bootstrap.getObjectMapperFactory().registerModule(YamlHelper.getModule());
+        bootstrap.setName("Glass House");
+        bootstrap.addBundle(new AssetsBundle("/assets/", "/"));
     }
 
     /*
