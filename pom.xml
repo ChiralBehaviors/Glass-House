@@ -61,11 +61,4 @@
 			</plugin>
 		</plugins>
 	</build>
-	<dependencies>
-		<dependency>
-			<groupId>com.hellblazer</groupId>
-			<artifactId>nexus</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-	</dependencies>
 </project>
