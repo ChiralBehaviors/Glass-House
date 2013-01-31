@@ -10,3 +10,5 @@ Glass House requires Java 7 and Maven 3.x to build.  To build, cd to root direct
     mvn clean install
     
 The license for Glass House is Apache 2.0
+
+See the [Glass House Wiki](https://github.com/Hellblazer/Glass-House/wiki) for usage details and more information.
