@@ -45,8 +45,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
+import com.yammer.dropwizard.auth.Auth;
 
 @Path("jmx/aggregate/{objectName}/attributes")
 public class MBeansObjectNameAttributes {
@@ -62,7 +64,8 @@ public class MBeansObjectNameAttributes {
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response getAttribute(@PathParam("objectName") String objectName,
-                                 @QueryParam("nodes") String nodes) {
+                                 @QueryParam("nodes") String nodes,
+                                 @Auth AuthenticatedUser user) {
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
         try {
             return Response.ok(aggregateService.getAllAttributeValues(jmxNodes,

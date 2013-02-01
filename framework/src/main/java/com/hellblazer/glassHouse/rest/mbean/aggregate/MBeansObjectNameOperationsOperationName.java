@@ -44,8 +44,10 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
+import com.yammer.dropwizard.auth.Auth;
 
 @Path("jmx/aggregate/{objectName}/operations/{operationName}")
 public class MBeansObjectNameOperationsOperationName {
@@ -61,7 +63,8 @@ public class MBeansObjectNameOperationsOperationName {
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response invokeOperation(@PathParam("objectName") String objectName,
                                     @PathParam("operationName") String operationName,
-                                    @QueryParam("nodes") String nodes) {
+                                    @QueryParam("nodes") String nodes,
+                                    @Auth AuthenticatedUser user) {
         log.info("invokeOperationWithParameters: " + operationName);
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 

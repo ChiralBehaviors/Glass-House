@@ -35,7 +35,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.IndexJaxBean;
+import com.yammer.dropwizard.auth.Auth;
 
 /* ------------------------------------------------------------ */
 /**
@@ -47,7 +49,7 @@ public class Index {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public IndexJaxBean getObjectNames() {
+    public IndexJaxBean getObjectNames(@Auth AuthenticatedUser user) {
         return new IndexJaxBean(uriInfo);
     }
 

@@ -27,11 +27,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
 import com.hellblazer.glassHouse.rest.service.JmxService;
+import com.yammer.dropwizard.auth.Auth;
 
 @Path("jmx/mbean/{objectName}")
 public class MBeanObjectName {
@@ -47,7 +49,8 @@ public class MBeanObjectName {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public Response getOperations(@PathParam("objectName") String objectName) {
+    public Response getOperations(@PathParam("objectName") String objectName,
+                                  @Auth AuthenticatedUser user) {
         MBeanAttributeJaxBeans mBeanAttributesJaxBean;
         MBeanOperationJaxBeans mBeanOperationsJaxBean;
         try {

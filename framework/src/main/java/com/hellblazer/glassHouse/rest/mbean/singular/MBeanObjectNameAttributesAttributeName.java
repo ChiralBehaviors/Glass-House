@@ -27,8 +27,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.JmxService;
+import com.yammer.dropwizard.auth.Auth;
 
 @Path("jmx/mbean/{objectName}/attributes/{attributeName}")
 public class MBeanObjectNameAttributesAttributeName {
@@ -45,7 +47,8 @@ public class MBeanObjectNameAttributesAttributeName {
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response getAttribute(@PathParam("objectName") String objectName,
-                                 @PathParam("attributeName") String attributeName) {
+                                 @PathParam("attributeName") String attributeName,
+                                 @Auth AuthenticatedUser user) {
         try {
             return Response.ok(jmxService.getAttributeValue(objectName,
                                                             attributeName)).build();

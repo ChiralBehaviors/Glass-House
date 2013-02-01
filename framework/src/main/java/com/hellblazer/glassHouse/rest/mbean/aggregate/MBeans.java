@@ -38,13 +38,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
+import com.yammer.dropwizard.auth.Auth;
 
 @Path("jmx/aggregate")
 public class MBeans {
     public static String AGGREGATE_ROOT = "jmx/mbeans";
-    
+
     /**
      * @param aggregateService
      */
@@ -59,7 +61,8 @@ public class MBeans {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public MBeanShortJaxBeans getMBeans(@QueryParam("nodes") String nodes) {
+    public MBeanShortJaxBeans getMBeans(@QueryParam("nodes") String nodes,
+                                        @Auth AuthenticatedUser user) {
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
         return aggregateService.getMBeanShortJaxBeans(uriInfo, jmxNodes);
     }

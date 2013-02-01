@@ -43,7 +43,7 @@
             
             function updateMPointData(){
                 $.ajax({
-                    url: "ws/mbeans/java.lang:type=Memory/attributes/HeapMemoryUsage",
+                    url: "service/jmx/aggregate/java.lang:type=Memory/attributes/HeapMemoryUsage",
                     dataType: "json",
                     success: function(json){
                         for (var i = 0; i < json.Attribute.length; i++) {
@@ -124,7 +124,7 @@
     <div id=header>
         <ul class="topnav">
             <li>
-                <a href="/">Home</a>
+                <a href="/index.html">Home</a>
             </li>
             <li>
                 <a href="/memory.html">Memory</a>

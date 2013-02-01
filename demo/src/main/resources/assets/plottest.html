@@ -12,7 +12,7 @@
             var mpoints_max = 30;
             
             function updateMemoryGraph(){
-                $.get("/ws/localhost:8888/memory", function(data){
+                $.get("/service/jmx/localhost:8888/memory", function(data){
                     mpoints.push(data.used);
                     if (mpoints.length > mpoints_max) 
                         mpoints.splice(0, 1);

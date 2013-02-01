@@ -45,11 +45,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanAttributeJaxBeans;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
+import com.yammer.dropwizard.auth.Auth;
 
 @Path("jmx/aggregate/{objectName}")
 public class MBeansObjectName {
@@ -66,7 +68,8 @@ public class MBeansObjectName {
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response getOperations(@PathParam("objectName") String objectName,
-                                  @QueryParam("nodes") String nodes) {
+                                  @QueryParam("nodes") String nodes,
+                                  @Auth AuthenticatedUser user) {
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
         MBeanAttributeJaxBeans mBeanAttributesJaxBean;

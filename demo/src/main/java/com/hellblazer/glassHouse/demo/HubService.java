@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hellblazer.glassHouse;
+package com.hellblazer.glassHouse.demo;
 
 import static com.hellblazer.slp.ServiceScope.SERVICE_TYPE;
 
@@ -25,8 +25,8 @@ import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.discovery.Hub;
-import com.hellblazer.glassHouse.rest.JmxHealthCheck;
 import com.hellblazer.glassHouse.rest.mbean.aggregate.MBeans;
 import com.hellblazer.glassHouse.rest.mbean.aggregate.MBeansObjectName;
 import com.hellblazer.glassHouse.rest.mbean.aggregate.MBeansObjectNameAttributes;
@@ -47,6 +47,7 @@ import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.nexus.GossipScope;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.assets.AssetsBundle;
+import com.yammer.dropwizard.auth.basic.BasicAuthProvider;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 
@@ -86,6 +87,9 @@ public class HubService extends Service<HubConfiguration> {
     @Override
     public void run(HubConfiguration configuration, Environment environment)
                                                                             throws Exception {
+        environment.addProvider(new BasicAuthProvider<AuthenticatedUser>(
+                                                                         new ExampleAuthenticator(),
+                                                                         "SUPER SECRET STUFF"));
         MBeanServer mbs = MBeanServerFactory.createMBeanServer(configuration.domainName);
         GossipScope scope = new GossipScope(configuration.gossip.construct());
         scope.start();

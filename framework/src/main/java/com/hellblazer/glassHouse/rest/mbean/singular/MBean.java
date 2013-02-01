@@ -23,8 +23,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.glassHouse.rest.service.JmxService;
+import com.yammer.dropwizard.auth.Auth;
 
 /**
  * @author hhildebrand
@@ -48,7 +50,7 @@ public class MBean {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public MBeanShortJaxBeans getMBeans() { 
+    public MBeanShortJaxBeans getMBeans(@Auth AuthenticatedUser user) { 
         return jmxService.getMBeanShortJaxBeans(uriInfo);
     }
 

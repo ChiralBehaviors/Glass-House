@@ -33,7 +33,7 @@
                 // Navigation DropDown ends here
                 
                 $.ajax({
-                    url: "ws/nodes",
+                    url: "service/jmx/nodes",
                     dataType: "json",
                     success: function(json){
                         var aaData = [];
@@ -66,7 +66,7 @@
     <div id=header>
         <ul class="topnav">
             <li>
-                <a href="/">Home</a>
+                <a href="/index.html">Home</a>
             </li>
             <li>
                 <a href="memory.html">Memory</a>

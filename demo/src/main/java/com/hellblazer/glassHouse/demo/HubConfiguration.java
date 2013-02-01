@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hellblazer.glassHouse;
+package com.hellblazer.glassHouse.demo;
 
 import java.util.Collections;
 import java.util.Map;

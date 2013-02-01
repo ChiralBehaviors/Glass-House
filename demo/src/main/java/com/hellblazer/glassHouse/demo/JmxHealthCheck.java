@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hellblazer.glassHouse.rest;
+package com.hellblazer.glassHouse.demo;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;

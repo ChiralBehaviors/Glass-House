@@ -29,8 +29,10 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.JmxService;
+import com.yammer.dropwizard.auth.Auth;
 
 @Path("jmx/mbean/{objectName}/operations/{operationName}")
 public class MBeanObjectNameOperationsOperationName {
@@ -45,7 +47,8 @@ public class MBeanObjectNameOperationsOperationName {
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response invokeOperation(@PathParam("objectName") String objectName,
-                                    @PathParam("operationName") String operationName) {
+                                    @PathParam("operationName") String operationName,
+                                    @Auth AuthenticatedUser user) {
         log.info("invokeOperationWithParameters: " + operationName);
 
         try {
@@ -68,7 +71,8 @@ public class MBeanObjectNameOperationsOperationName {
     public Response invokeOperationWithParameters(@PathParam("objectName") String objectName,
                                                   @PathParam("operationName") String operationName,
                                                   @PathParam("params") String params,
-                                                  @PathParam("signature") String signature) {
+                                                  @PathParam("signature") String signature,
+                                                  @Auth AuthenticatedUser user) {
         log.info("invokeOperationWithParameters: " + operationName);
 
         String[] paramArray = params.split(",");

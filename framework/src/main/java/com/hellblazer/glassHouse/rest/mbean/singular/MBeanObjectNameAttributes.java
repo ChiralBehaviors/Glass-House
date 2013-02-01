@@ -30,8 +30,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.JmxService;
+import com.yammer.dropwizard.auth.Auth;
 
 /**
  * @author hhildebrand
@@ -52,7 +54,8 @@ public class MBeanObjectNameAttributes {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public Response getAttribute(@PathParam("objectName") String objectName) {
+    public Response getAttribute(@PathParam("objectName") String objectName,
+                                 @Auth AuthenticatedUser user) {
         try {
             return Response.ok(jmxService.getAllAttributeValues(objectName)).build();
         } catch (InstanceNotFoundException e) {
