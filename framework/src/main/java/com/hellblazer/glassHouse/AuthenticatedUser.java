@@ -16,6 +16,11 @@
 
 package com.hellblazer.glassHouse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.hellblazer.glassHouse.rest.mbean.aggregate.MBeans;
+
 /**
  * A simple no-op interface to allow protection of the REST resources.
  * 
@@ -23,5 +28,7 @@ package com.hellblazer.glassHouse;
  * 
  */
 public interface AuthenticatedUser {
+    public static final Logger AUDIT_LOG = LoggerFactory.getLogger(MBeans.class);
+
     public String getName();
 }

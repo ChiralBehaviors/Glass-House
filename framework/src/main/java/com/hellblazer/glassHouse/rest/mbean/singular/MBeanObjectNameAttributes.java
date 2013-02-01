@@ -16,6 +16,8 @@
 
 package com.hellblazer.glassHouse.rest.mbean.singular;
 
+import static com.hellblazer.glassHouse.AuthenticatedUser.AUDIT_LOG;
+
 import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
 import javax.management.MalformedObjectNameException;
@@ -56,6 +58,8 @@ public class MBeanObjectNameAttributes {
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response getAttribute(@PathParam("objectName") String objectName,
                                  @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] retrieving all attribute values for [%s]",
+                                     user.getName(), objectName));
         try {
             return Response.ok(jmxService.getAllAttributeValues(objectName)).build();
         } catch (InstanceNotFoundException e) {

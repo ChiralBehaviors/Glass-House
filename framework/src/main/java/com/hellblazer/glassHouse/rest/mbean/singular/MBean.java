@@ -16,6 +16,8 @@
 
 package com.hellblazer.glassHouse.rest.mbean.singular;
 
+import static com.hellblazer.glassHouse.AuthenticatedUser.AUDIT_LOG;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -50,7 +52,8 @@ public class MBean {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public MBeanShortJaxBeans getMBeans(@Auth AuthenticatedUser user) { 
+    public MBeanShortJaxBeans getMBeans(@Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] listing MBeans", user.getName()));
         return jmxService.getMBeanShortJaxBeans(uriInfo);
     }
 

@@ -28,6 +28,8 @@
 
 package com.hellblazer.glassHouse.rest.mbean.aggregate;
 
+import static com.hellblazer.glassHouse.AuthenticatedUser.AUDIT_LOG;
+
 import java.util.Collection;
 
 import javax.management.InstanceNotFoundException;
@@ -66,6 +68,8 @@ public class MBeansObjectNameAttributes {
     public Response getAttribute(@PathParam("objectName") String objectName,
                                  @QueryParam("nodes") String nodes,
                                  @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] retrieving all attribute values for [%s] on nodes [%s]",
+                                     user.getName(), objectName, nodes));
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
         try {
             return Response.ok(aggregateService.getAllAttributeValues(jmxNodes,

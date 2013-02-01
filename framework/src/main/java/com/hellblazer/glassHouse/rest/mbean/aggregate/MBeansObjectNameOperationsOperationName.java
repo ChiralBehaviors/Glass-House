@@ -28,6 +28,8 @@
 
 package com.hellblazer.glassHouse.rest.mbean.aggregate;
 
+import static com.hellblazer.glassHouse.AuthenticatedUser.AUDIT_LOG;
+
 import java.util.Collection;
 
 import javax.management.InstanceNotFoundException;
@@ -65,6 +67,9 @@ public class MBeansObjectNameOperationsOperationName {
                                     @PathParam("operationName") String operationName,
                                     @QueryParam("nodes") String nodes,
                                     @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] invoking [%s] operation on [%s] for nodes [%s]",
+                                     user.getName(), operationName, objectName,
+                                     nodes));
         log.info("invokeOperationWithParameters: " + operationName);
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
@@ -90,8 +95,11 @@ public class MBeansObjectNameOperationsOperationName {
                                                   @PathParam("operationName") String operationName,
                                                   @PathParam("params") String params,
                                                   @PathParam("signature") String signature,
-                                                  @QueryParam("nodes") String nodes) {
-        log.info("invokeOperationWithParameters: " + operationName);
+                                                  @QueryParam("nodes") String nodes,
+                                                  @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] invoking [%s(%s)] operation on [%s] for nodes [%s]",
+                                     user.getName(), operationName, signature,
+                                     objectName, nodes));
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
         String[] paramArray = params.split(",");

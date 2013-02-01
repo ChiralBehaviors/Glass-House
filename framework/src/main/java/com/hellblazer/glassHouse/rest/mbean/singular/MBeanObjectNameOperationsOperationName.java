@@ -16,6 +16,8 @@
 
 package com.hellblazer.glassHouse.rest.mbean.singular;
 
+import static com.hellblazer.glassHouse.AuthenticatedUser.AUDIT_LOG;
+
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.ws.rs.GET;
@@ -49,6 +51,8 @@ public class MBeanObjectNameOperationsOperationName {
     public Response invokeOperation(@PathParam("objectName") String objectName,
                                     @PathParam("operationName") String operationName,
                                     @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] invoking [%s] operation on [%s]",
+                                     user.getName(), operationName, objectName));
         log.info("invokeOperationWithParameters: " + operationName);
 
         try {
@@ -73,6 +77,9 @@ public class MBeanObjectNameOperationsOperationName {
                                                   @PathParam("params") String params,
                                                   @PathParam("signature") String signature,
                                                   @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] invoking [%s(%s)] operation on [%s]",
+                                     user.getName(), operationName, signature,
+                                     objectName));
         log.info("invokeOperationWithParameters: " + operationName);
 
         String[] paramArray = params.split(",");

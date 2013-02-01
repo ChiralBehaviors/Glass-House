@@ -13,6 +13,8 @@
 
 package com.hellblazer.glassHouse.rest.mbean.singular;
 
+import static com.hellblazer.glassHouse.AuthenticatedUser.AUDIT_LOG;
+
 import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
 import javax.management.MalformedObjectNameException;
@@ -51,6 +53,8 @@ public class MBeanObjectName {
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response getOperations(@PathParam("objectName") String objectName,
                                   @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] retrieving [%s] operation metadata",
+                                     user.getName(), objectName));
         MBeanAttributeJaxBeans mBeanAttributesJaxBean;
         MBeanOperationJaxBeans mBeanOperationsJaxBean;
         try {

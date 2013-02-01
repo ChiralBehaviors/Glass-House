@@ -52,6 +52,7 @@ import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
 import com.yammer.dropwizard.auth.Auth;
+import static com.hellblazer.glassHouse.AuthenticatedUser.AUDIT_LOG;
 
 @Path("jmx/aggregate/{objectName}")
 public class MBeansObjectName {
@@ -70,6 +71,8 @@ public class MBeansObjectName {
     public Response getOperations(@PathParam("objectName") String objectName,
                                   @QueryParam("nodes") String nodes,
                                   @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] retrieving [%s] operation metadata for nodes [%s]",
+                                     user.getName(), objectName, nodes));
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
 
         MBeanAttributeJaxBeans mBeanAttributesJaxBean;

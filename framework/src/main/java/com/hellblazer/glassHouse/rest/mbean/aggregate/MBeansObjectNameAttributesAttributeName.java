@@ -28,6 +28,8 @@
 
 package com.hellblazer.glassHouse.rest.mbean.aggregate;
 
+import static com.hellblazer.glassHouse.AuthenticatedUser.AUDIT_LOG;
+
 import java.util.Collection;
 
 import javax.management.MalformedObjectNameException;
@@ -65,6 +67,9 @@ public class MBeansObjectNameAttributesAttributeName {
                                  @PathParam("attributeName") String attributeName,
                                  @QueryParam("nodes") String nodes,
                                  @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] retrieving all values [%s] of [%s] on nodes [%s]",
+                                     user.getName(), attributeName, objectName,
+                                     nodes));
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
         try {
             return Response.ok(aggregateService.getAttributeValues(jmxNodes,

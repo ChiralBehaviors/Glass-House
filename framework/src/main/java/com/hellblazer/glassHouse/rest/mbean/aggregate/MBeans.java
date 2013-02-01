@@ -42,9 +42,11 @@ import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
 import com.yammer.dropwizard.auth.Auth;
+import static com.hellblazer.glassHouse.AuthenticatedUser.*;
 
 @Path("jmx/aggregate")
 public class MBeans {
+
     public static String AGGREGATE_ROOT = "jmx/mbeans";
 
     /**
@@ -63,6 +65,8 @@ public class MBeans {
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public MBeanShortJaxBeans getMBeans(@QueryParam("nodes") String nodes,
                                         @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] listing aggregate MBeans for nodes [%s]",
+                                     user.getName(), nodes));
         Collection<String> jmxNodes = aggregateService.getNodesToAggregate(nodes);
         return aggregateService.getMBeanShortJaxBeans(uriInfo, jmxNodes);
     }

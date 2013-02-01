@@ -16,6 +16,8 @@
 
 package com.hellblazer.glassHouse.rest.mbean.singular;
 
+import static com.hellblazer.glassHouse.AuthenticatedUser.AUDIT_LOG;
+
 import javax.management.MalformedObjectNameException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -49,6 +51,8 @@ public class MBeanObjectNameAttributesAttributeName {
     public Response getAttribute(@PathParam("objectName") String objectName,
                                  @PathParam("attributeName") String attributeName,
                                  @Auth AuthenticatedUser user) {
+        AUDIT_LOG.info(String.format("User [%s] retrieving value of [%s] for [%s]",
+                                     user.getName(), attributeName, objectName));
         try {
             return Response.ok(jmxService.getAttributeValue(objectName,
                                                             attributeName)).build();
