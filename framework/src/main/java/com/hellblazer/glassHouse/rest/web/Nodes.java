@@ -42,7 +42,7 @@ import com.hellblazer.glassHouse.rest.domain.jaxb.NodesJaxBean;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
 import com.yammer.dropwizard.auth.Auth;
 
-@Path("jmx/nodes")
+@Path("/nodes")
 public class Nodes {
     /**
      * @param aggregateService

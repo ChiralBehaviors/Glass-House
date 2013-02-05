@@ -1,5 +1,5 @@
 http:
-  rootPath: /service/*
+  rootPath: /jmx/*
   
 cascadingServiceName: "hellblazer:type=cnc"
 gossip:

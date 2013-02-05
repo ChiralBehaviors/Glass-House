@@ -34,7 +34,7 @@ import com.yammer.dropwizard.auth.Auth;
  * @author hhildebrand
  * 
  */
-@Path("jmx/mbean")
+@Path("/mbean")
 public class MBean {
 
     /**

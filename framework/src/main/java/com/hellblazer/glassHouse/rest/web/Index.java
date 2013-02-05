@@ -42,7 +42,7 @@ import com.yammer.dropwizard.auth.Auth;
 /* ------------------------------------------------------------ */
 /**
  */
-@Path("jmx")
+@Path("/")
 public class Index {
     @Context
     UriInfo uriInfo;

@@ -54,7 +54,7 @@ import com.hellblazer.glassHouse.rest.service.AggregateService;
 import com.yammer.dropwizard.auth.Auth;
 import static com.hellblazer.glassHouse.AuthenticatedUser.AUDIT_LOG;
 
-@Path("jmx/aggregate/{objectName}")
+@Path("/aggregate/{objectName}")
 public class MBeansObjectName {
 
     private final AggregateService aggregateService;

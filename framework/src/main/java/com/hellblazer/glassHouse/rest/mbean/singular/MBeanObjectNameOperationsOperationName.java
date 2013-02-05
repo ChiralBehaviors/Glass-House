@@ -36,7 +36,7 @@ import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.JmxService;
 import com.yammer.dropwizard.auth.Auth;
 
-@Path("jmx/mbean/{objectName}/operations/{operationName}")
+@Path("/mbean/{objectName}/operations/{operationName}")
 public class MBeanObjectNameOperationsOperationName {
     public MBeanObjectNameOperationsOperationName(JmxService jmxService) {
         this.jmxService = jmxService;

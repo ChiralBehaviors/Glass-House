@@ -51,7 +51,7 @@ import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
 import com.yammer.dropwizard.auth.Auth;
 
-@Path("jmx/aggregate/{objectName}/operations/{operationName}")
+@Path("/aggregate/{objectName}/operations/{operationName}")
 public class MBeansObjectNameOperationsOperationName {
     public MBeansObjectNameOperationsOperationName(AggregateService aggregateService) {
         this.aggregateService = aggregateService;

@@ -37,7 +37,7 @@ import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanOperationJaxBeans;
 import com.hellblazer.glassHouse.rest.service.JmxService;
 import com.yammer.dropwizard.auth.Auth;
 
-@Path("jmx/mbean/{objectName}")
+@Path("/mbean/{objectName}")
 public class MBeanObjectName {
 
     private final JmxService jmxService;

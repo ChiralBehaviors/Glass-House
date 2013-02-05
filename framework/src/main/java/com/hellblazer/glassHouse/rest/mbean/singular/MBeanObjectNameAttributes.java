@@ -42,7 +42,7 @@ import com.yammer.dropwizard.auth.Auth;
  * 
  */
 
-@Path("jmx/mbean/{objectName}/attributes")
+@Path("/mbean/{objectName}/attributes")
 public class MBeanObjectNameAttributes {
 
     public MBeanObjectNameAttributes(JmxService jmxService) {

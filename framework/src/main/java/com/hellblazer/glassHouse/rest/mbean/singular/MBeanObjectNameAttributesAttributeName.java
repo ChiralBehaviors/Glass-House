@@ -34,7 +34,7 @@ import com.hellblazer.glassHouse.rest.domain.jaxb.ErrorJaxBean;
 import com.hellblazer.glassHouse.rest.service.JmxService;
 import com.yammer.dropwizard.auth.Auth;
 
-@Path("jmx/mbean/{objectName}/attributes/{attributeName}")
+@Path("/mbean/{objectName}/attributes/{attributeName}")
 public class MBeanObjectNameAttributesAttributeName {
 
     public MBeanObjectNameAttributesAttributeName(JmxService jmxService) {

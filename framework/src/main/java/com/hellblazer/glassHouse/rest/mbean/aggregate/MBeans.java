@@ -44,10 +44,8 @@ import com.hellblazer.glassHouse.rest.service.AggregateService;
 import com.yammer.dropwizard.auth.Auth;
 import static com.hellblazer.glassHouse.AuthenticatedUser.*;
 
-@Path("jmx/aggregate")
+@Path("/aggregate")
 public class MBeans {
-
-    public static String AGGREGATE_ROOT = "jmx/mbeans";
 
     /**
      * @param aggregateService
