@@ -1,0 +1,20 @@
+#todoapp.filter-active #todo-list .completed,
+#todoapp.filter-completed #todo-list .active {
+  display: none;
+}
+
+#footer {
+  display: none;
+}
+
+table, tr, td, th, thead {
+    padding: 5px;
+    margin: 5px;
+    border: 2px solid #ccc;
+}
+
+thead {
+    background-color: #555;
+    color: #fff;
+}
+
