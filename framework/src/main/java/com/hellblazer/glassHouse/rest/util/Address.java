@@ -23,9 +23,6 @@ import java.net.InetSocketAddress;
  * 
  */
 public class Address {
-    private final String host;
-    private final int    port;
-
     public static Address from(String hostAndPort) {
         String host;
         int port;
@@ -40,6 +37,10 @@ public class Address {
         return new Address(host, port);
     }
 
+    private final String host;
+
+    private final int    port;
+
     public Address(String host, int port) {
         this.host = host.trim();
         this.port = port;
@@ -47,21 +48,17 @@ public class Address {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null || getClass() != obj.getClass())
+        }
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
+        }
         Address that = (Address) obj;
-        if (!host.equals(that.host))
+        if (!host.equals(that.host)) {
             return false;
+        }
         return port == that.port;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = host.hashCode();
-        result = 31 * result + port;
-        return result;
     }
 
     public String getHost() {
@@ -70,6 +67,13 @@ public class Address {
 
     public int getPort() {
         return port;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = host.hashCode();
+        result = 31 * result + port;
+        return result;
     }
 
     public InetSocketAddress toSocketAddress() {

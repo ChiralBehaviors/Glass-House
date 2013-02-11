@@ -81,7 +81,7 @@ public interface AggregateService {
     public OperationReturnValueJaxBeans invokeOperation(Collection<String> jmxNodes,
                                                         String objectName,
                                                         String operationName,
-                                                        Object[] params,
+                                                        String[] params,
                                                         String[] signature)
                                                                            throws MalformedObjectNameException,
                                                                            NullPointerException,

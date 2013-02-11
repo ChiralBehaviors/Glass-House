@@ -52,6 +52,7 @@ import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.OperationReturnValueJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.OperationReturnValueJaxBeans;
 import com.hellblazer.glassHouse.rest.service.AggregateService;
+import com.hellblazer.glassHouse.rest.util.ValueFactory;
 import com.hellblazer.jmx.cascading.CascadingAgent;
 
 public class AggregateServiceImpl implements AggregateService {
@@ -151,11 +152,17 @@ public class AggregateServiceImpl implements AggregateService {
     }
 
     private final MBeanServer  mbeanServer;
-
+    private final ValueFactory valueFactory;
     private final List<String> mBeanServerNodes = new CopyOnWriteArrayList<String>();
 
+    public AggregateServiceImpl(MBeanServer mBeanServer,
+                                ValueFactory valueFactory) {
+        this.mbeanServer = mBeanServer;
+        this.valueFactory = valueFactory;
+    }
+
     public AggregateServiceImpl(MBeanServer mBeanServer) {
-        mbeanServer = mBeanServer;
+        this(mBeanServer, ValueFactory.getDefault());
     }
 
     /**
@@ -318,29 +325,43 @@ public class AggregateServiceImpl implements AggregateService {
                                                                              NullPointerException,
                                                                              InstanceNotFoundException {
         return invokeOperation(jmxNodes, objectName, operationName,
-                               new Object[] {}, new String[] {});
+                               new String[] {}, new String[] {});
     }
 
     @Override
     public OperationReturnValueJaxBeans invokeOperation(Collection<String> jmxNodes,
                                                         String objectName,
                                                         String operationName,
-                                                        Object[] params,
+                                                        String[] paramStrings,
                                                         String[] signature)
                                                                            throws MalformedObjectNameException,
                                                                            NullPointerException,
                                                                            InstanceNotFoundException {
+        assert paramStrings != null;
+        assert signature != null;
         Set<OperationReturnValueJaxBean> operationReturnValueJaxBeans = new TreeSet<OperationReturnValueJaxBean>();
 
         Set<ObjectName> names = queryObjectNames(jmxNodes, objectName);
         if (names.size() == 0) {
             throw new InstanceNotFoundException(objectName);
         }
+        Object[] parameters = new Object[paramStrings.length];
+        int i = 0;
+        for (String param : paramStrings) {
+            try {
+                parameters[i] = valueFactory.valueOf(param, signature[i]);
+            } catch (Exception e) {
+                throw new IllegalArgumentException(
+                                                   String.format("Invalid argument type [%s]",
+                                                                 param), e);
+            }
+            i++;
+        }
         for (ObjectName n : names) {
             Object returnValue = null;
             String exception = null;
             try {
-                returnValue = mbeanServer.invoke(n, operationName, params,
+                returnValue = mbeanServer.invoke(n, operationName, parameters,
                                                  signature);
             } catch (ReflectionException | MBeanException
                     | InstanceNotFoundException e) {

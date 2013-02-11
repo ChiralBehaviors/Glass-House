@@ -312,7 +312,7 @@ public class AggregateServiceFunctionalTest {
 
         String value = "Foo Me, Baby";
 
-        Object[] params = new Object[] { value };
+        String[] params = new String[] { value };
 
         String[] signature = new String[] { String.class.getCanonicalName() };
 

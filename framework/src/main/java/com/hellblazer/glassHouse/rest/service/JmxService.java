@@ -123,7 +123,7 @@ public interface JmxService {
      */
     OperationReturnValueJaxBean invokeOperation(String objectName,
                                                 String operationName,
-                                                Object[] paramArray,
+                                                String[] paramArray,
                                                 String[] signatureArray)
                                                                         throws MalformedObjectNameException,
                                                                         NullPointerException,

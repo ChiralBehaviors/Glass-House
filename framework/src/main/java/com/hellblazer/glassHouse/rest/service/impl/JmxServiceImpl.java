@@ -43,6 +43,7 @@ import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanShortJaxBean;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.MBeanShortJaxBeans;
 import com.hellblazer.glassHouse.rest.domain.jaxb.jmx.OperationReturnValueJaxBean;
 import com.hellblazer.glassHouse.rest.service.JmxService;
+import com.hellblazer.glassHouse.rest.util.ValueFactory;
 import com.hellblazer.jmx.cascading.CascadingAgent;
 
 /**
@@ -51,14 +52,16 @@ import com.hellblazer.jmx.cascading.CascadingAgent;
  */
 public class JmxServiceImpl implements JmxService {
 
-    private final MBeanServer mbs;
+    private final MBeanServer  mbs;
+    private final ValueFactory valueFactory;
 
-    /**
-     * @param mbs
-     */
-    public JmxServiceImpl(MBeanServer mbs) {
-        super();
-        this.mbs = mbs;
+    public JmxServiceImpl(MBeanServer mBeanServer, ValueFactory valueFactory) {
+        this.mbs = mBeanServer;
+        this.valueFactory = valueFactory;
+    }
+
+    public JmxServiceImpl(MBeanServer mBeanServer) {
+        this(mBeanServer, ValueFactory.getDefault());
     }
 
     /* (non-Javadoc)
@@ -162,7 +165,7 @@ public class JmxServiceImpl implements JmxService {
                                                                             throws MalformedObjectNameException,
                                                                             NullPointerException,
                                                                             InstanceNotFoundException {
-        return invokeOperation(objectName, operationName, new Object[] {},
+        return invokeOperation(objectName, operationName, new String[] {},
                                new String[] {});
     }
 
@@ -172,16 +175,30 @@ public class JmxServiceImpl implements JmxService {
     @Override
     public OperationReturnValueJaxBean invokeOperation(String objectName,
                                                        String operationName,
-                                                       Object[] params,
+                                                       String[] paramStrings,
                                                        String[] signature)
                                                                           throws MalformedObjectNameException,
                                                                           NullPointerException,
                                                                           InstanceNotFoundException {
+        assert paramStrings != null;
+        assert signature != null;
         ObjectName n = ObjectName.getInstance(objectName);
+        Object[] parameters = new Object[paramStrings.length];
+        int i = 0;
+        for (String param : paramStrings) {
+            try {
+                parameters[i] = valueFactory.valueOf(param, signature[i]);
+            } catch (Exception e) {
+                throw new IllegalArgumentException(
+                                                   String.format("Invalid argument type [%s]",
+                                                                 param), e);
+            }
+            i++;
+        }
         Object returnValue = null;
         String exception = null;
         try {
-            returnValue = mbs.invoke(n, operationName, params, signature);
+            returnValue = mbs.invoke(n, operationName, parameters, signature);
         } catch (ReflectionException | MBeanException e) {
             exception = e.toString();
         }
