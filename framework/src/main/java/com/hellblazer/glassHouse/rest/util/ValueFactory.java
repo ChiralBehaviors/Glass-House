@@ -47,6 +47,7 @@ public class ValueFactory implements ValueConverter {
         valueFactory.registerValueConverter(converter);
         valueFactory.registerValueConverter(new PropertiesValueConverter());
         valueFactory.registerValueConverter(new SetValueConverter());
+        valueFactory.registerValueConverter(new DateValueConverter());
         return valueFactory;
     }
 

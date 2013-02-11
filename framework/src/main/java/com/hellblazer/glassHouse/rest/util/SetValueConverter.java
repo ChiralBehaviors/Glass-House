@@ -28,9 +28,6 @@ public class SetValueConverter implements ValueConverter {
 
     private static String[] supported = { Set.class.getName() };
 
-    public SetValueConverter() {
-    }
-
     @Override
     public String[] getSupportedTypes() {
         return supported;
