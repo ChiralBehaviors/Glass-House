@@ -71,7 +71,7 @@ public class JmxServiceFunctionalTest {
     public static final String TEST_2_BEAN = "mydomain:type=Test2";
 
     private static int allocatePort() {
-	InetSocketAddress address = new InetSocketAddress("localhost", 0);
+	InetSocketAddress address = new InetSocketAddress("127.0.0.1", 0);
 	ServerSocket socket = null;
 	try {
 	    socket = new ServerSocket();
@@ -125,7 +125,7 @@ public class JmxServiceFunctionalTest {
 	mbs = MBeanServerFactory.newMBeanServer();
 
 	int port1 = allocatePort();
-	InetSocketAddress jmxEndpoint = new InetSocketAddress("localhost",
+	InetSocketAddress jmxEndpoint = new InetSocketAddress("127.0.0.1",
 		port1);
 	server = contruct(jmxEndpoint, mbs);
 	server.start();
@@ -134,7 +134,7 @@ public class JmxServiceFunctionalTest {
 
 	assertTrue(server.isActive());
 
-	node1 = String.format("%s|%s", "localhost", port1);
+	node1 = String.format("%s|%s", "127.0.0.1", port1);
 
 	log.trace(String.format("Node 1 label: %s", node1));
 	Test1 test1 = new Test1();
