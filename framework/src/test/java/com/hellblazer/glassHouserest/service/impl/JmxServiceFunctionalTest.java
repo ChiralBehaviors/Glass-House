@@ -95,7 +95,13 @@ public class JmxServiceFunctionalTest {
         Map<String, Object> env = new HashMap<String, Object>();
         JMXServiceURL url = new JMXServiceURL("rmi", jmxEndpoint.getHostName(),
                                               jmxEndpoint.getPort());
-        return JMXConnectorServerFactory.newJMXConnectorServer(url, env, mbs);
+        JMXConnectorServer connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, env, mbs);
+        try {
+	    Thread.sleep(1000);
+	} catch (InterruptedException e) {
+	    return null;
+	}
+	return connectorServer;
     }
 
     private JmxService         jmxService;
