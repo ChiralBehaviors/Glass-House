@@ -152,6 +152,8 @@ public class JmxServiceFunctionalTest {
                                                               port1);
         server = contruct(jmxEndpoint, mbs);
         server.start();
+        
+        Thread.sleep(1000);
 
         node1 = String.format("%s|%s", "localhost", port1);
 
