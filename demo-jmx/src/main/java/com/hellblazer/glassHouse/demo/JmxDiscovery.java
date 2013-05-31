@@ -16,7 +16,6 @@ package com.hellblazer.glassHouse.demo;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.rmi.NoSuchObjectException;
@@ -132,7 +131,7 @@ public class JmxDiscovery {
 	}
     }
 
-    public void start(InetAddress defaultHost) throws IOException {
+    public void start() throws IOException {
 	if (running.compareAndSet(false, true)) {
 	    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 		@Override
@@ -144,8 +143,8 @@ public class JmxDiscovery {
 		    }
 		}
 	    }, "Jmx Discovery Shutdown Hook"));
-	    InetSocketAddress jmxEndpoint = new InetSocketAddress(defaultHost,
-		    Utils.allocatePort(defaultHost));
+	    InetSocketAddress jmxEndpoint = new InetSocketAddress(
+		    Utils.allocatePort());
 	    log.info(String.format("JMX Endpoint on %s", jmxEndpoint));
 	    server = contruct(jmxEndpoint,
 		    ManagementFactory.getPlatformMBeanServer());

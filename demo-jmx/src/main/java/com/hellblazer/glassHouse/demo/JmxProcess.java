@@ -6,24 +6,10 @@ import java.io.InputStream;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.hellblazer.nexus.GossipScope;
+import com.hellblazer.slp.ServiceScope;
 
 public class JmxProcess {
-
-    public static void main(String[] argv) {
-	if (argv.length != 1) {
-	    System.err.println("Usage JmxProcess <config file>");
-	    System.exit(1);
-	}
-    }
-
-    public JmxProcess(JmxConfiguration config) {
-
-    }
-
-    public JmxProcess(String config) throws JsonParseException,
-	    JsonMappingException, IOException {
-	this(configFrom(config));
-    }
 
     public static JmxConfiguration configFrom(String config)
 	    throws JsonParseException, JsonMappingException, IOException {
@@ -38,5 +24,31 @@ public class JmxProcess {
 		    "Configuration resource %s does not exist", config));
 	}
 	return YamlHelper.fromYaml(is);
+    }
+
+    private final JmxDiscovery jmxDiscovery;
+    private final ServiceScope scope;
+
+    public static void main(String[] argv) {
+	if (argv.length != 1) {
+	    System.err.println("Usage JmxProcess <config file>");
+	    System.exit(1);
+	}
+    }
+
+    public JmxProcess(JmxConfiguration configuration) throws IOException,
+	    InterruptedException {
+	scope = new GossipScope(configuration.gossip.construct());
+	this.jmxDiscovery = new JmxDiscovery(configuration, scope);
+	scope.start();
+	jmxDiscovery.start();
+	while (true) {
+	    Thread.sleep(1000);
+	}
+    }
+
+    public JmxProcess(String config) throws JsonParseException,
+	    JsonMappingException, IOException, InterruptedException {
+	this(configFrom(config));
     }
 }
