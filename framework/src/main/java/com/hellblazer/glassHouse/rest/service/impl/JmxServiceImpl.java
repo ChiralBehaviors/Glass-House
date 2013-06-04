@@ -135,9 +135,8 @@ public class JmxServiceImpl implements JmxService {
 	Set<MBeanShortJaxBean> mBeanShortJaxBeans = new TreeSet<MBeanShortJaxBean>();
 	QueryExp query;
 	try {
-	    query = Query.and(ObjectName.getInstance("*:*"), Query
-		    .not(ObjectName.getInstance(String.format("%s:*",
-			    "JMImplementation"))));
+	    query = Query.not(ObjectName.getInstance(String.format("%s:*",
+		    "JMImplementation")));
 	} catch (MalformedObjectNameException | NullPointerException e) {
 	    throw new IllegalStateException(
 		    "Cannot create query to exclude JMImplementation");

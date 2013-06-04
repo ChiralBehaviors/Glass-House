@@ -93,7 +93,7 @@ public class HubService extends Service<HubConfiguration> {
         MBeanServer mbs = MBeanServerFactory.createMBeanServer(configuration.domainName);
         GossipScope scope = new GossipScope(configuration.gossip.construct());
         scope.start();
-        CascadingService cascadingService = new CascadingService();
+        CascadingService cascadingService = new CascadingService(mbs);
         ManagementFactory.getPlatformMBeanServer().registerMBean(cascadingService,
                                                                  new ObjectName(
                                                                                 configuration.cascadingServiceName));
