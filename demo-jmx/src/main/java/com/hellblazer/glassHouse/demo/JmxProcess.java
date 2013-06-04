@@ -29,11 +29,14 @@ public class JmxProcess {
     private final JmxDiscovery jmxDiscovery;
     private final ServiceScope scope;
 
-    public static void main(String[] argv) {
+    public static void main(String[] argv) throws JsonParseException,
+	    JsonMappingException, IOException, InterruptedException {
 	if (argv.length != 1) {
 	    System.err.println("Usage JmxProcess <config file>");
 	    System.exit(1);
 	}
+
+	new JmxProcess(configFrom(argv[0]));
     }
 
     public JmxProcess(JmxConfiguration configuration) throws IOException,

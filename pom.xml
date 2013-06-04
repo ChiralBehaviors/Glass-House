@@ -8,6 +8,13 @@
 	<description>Glass House umbrella app</description>
 	<packaging>pom</packaging>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<gossip.seed.host>localhost</gossip.seed.host>
+		<gossip.seed.port>55342</gossip.seed.port>
+	</properties>
+
 	<modules>
 		<module>framework</module>
 		<module>demo</module>

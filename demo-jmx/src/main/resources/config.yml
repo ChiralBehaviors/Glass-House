@@ -1,0 +1,4 @@
+serviceType: control
+gossip:
+    seeds: 
+      - ${gossip.seed.host}:${gossip.seed.port}

@@ -52,159 +52,176 @@ import com.hellblazer.jmx.cascading.CascadingAgent;
  */
 public class JmxServiceImpl implements JmxService {
 
-    private final MBeanServer  mbs;
+    private final MBeanServer mbs;
     private final ValueFactory valueFactory;
 
     public JmxServiceImpl(MBeanServer mBeanServer, ValueFactory valueFactory) {
-        this.mbs = mBeanServer;
-        this.valueFactory = valueFactory;
+	this.mbs = mBeanServer;
+	this.valueFactory = valueFactory;
     }
 
     public JmxServiceImpl(MBeanServer mBeanServer) {
-        this(mBeanServer, ValueFactory.getDefault());
+	this(mBeanServer, ValueFactory.getDefault());
     }
 
-    /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.JmxService#getAllAttributeValues(java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.hellblazer.glassHouse.rest.service.JmxService#getAllAttributeValues
+     * (java.lang.String)
      */
     @Override
     public MBeanAttributeValueJaxBeans getAllAttributeValues(String objectName)
-                                                                               throws InstanceNotFoundException,
-                                                                               MalformedObjectNameException,
-                                                                               NullPointerException,
-                                                                               IntrospectionException,
-                                                                               ReflectionException {
-        Set<MBeanAttributeValueJaxBean> mBeanAttributeValueJaxBeans = new TreeSet<MBeanAttributeValueJaxBean>();
+	    throws InstanceNotFoundException, MalformedObjectNameException,
+	    NullPointerException, IntrospectionException, ReflectionException {
+	Set<MBeanAttributeValueJaxBean> mBeanAttributeValueJaxBeans = new TreeSet<MBeanAttributeValueJaxBean>();
 
-        ObjectName n = ObjectName.getInstance(objectName);
-        for (MBeanAttributeInfo info : mbs.getMBeanInfo(n).getAttributes()) {
-            mBeanAttributeValueJaxBeans.add(getAttributeValue(n, info.getName()));
-        }
-        return new MBeanAttributeValueJaxBeans(mBeanAttributeValueJaxBeans);
+	ObjectName n = ObjectName.getInstance(objectName);
+	for (MBeanAttributeInfo info : mbs.getMBeanInfo(n).getAttributes()) {
+	    mBeanAttributeValueJaxBeans
+		    .add(getAttributeValue(n, info.getName()));
+	}
+	return new MBeanAttributeValueJaxBeans(mBeanAttributeValueJaxBeans);
     }
 
-    /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.JmxService#getAttributesMetaData(javax.ws.rs.core.UriInfo, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.hellblazer.glassHouse.rest.service.JmxService#getAttributesMetaData
+     * (javax.ws.rs.core.UriInfo, java.lang.String)
      */
     @Override
     public MBeanAttributeJaxBeans getAttributesMetaData(UriInfo uriInfo,
-                                                        String objectName)
-                                                                          throws InstanceNotFoundException,
-                                                                          IntrospectionException,
-                                                                          MalformedObjectNameException,
-                                                                          ReflectionException,
-                                                                          NullPointerException {
+	    String objectName) throws InstanceNotFoundException,
+	    IntrospectionException, MalformedObjectNameException,
+	    ReflectionException, NullPointerException {
 
-        Set<MBeanAttributeJaxBean> mBeanAttributeJaxBeans = new TreeSet<MBeanAttributeJaxBean>();
-        for (MBeanAttributeInfo info : mbs.getMBeanInfo(ObjectName.getInstance(objectName)).getAttributes()) {
-            mBeanAttributeJaxBeans.add(new MBeanAttributeJaxBean(uriInfo, info));
-        }
+	Set<MBeanAttributeJaxBean> mBeanAttributeJaxBeans = new TreeSet<MBeanAttributeJaxBean>();
+	for (MBeanAttributeInfo info : mbs.getMBeanInfo(
+		ObjectName.getInstance(objectName)).getAttributes()) {
+	    mBeanAttributeJaxBeans
+		    .add(new MBeanAttributeJaxBean(uriInfo, info));
+	}
 
-        return new MBeanAttributeJaxBeans(mBeanAttributeJaxBeans);
+	return new MBeanAttributeJaxBeans(mBeanAttributeJaxBeans);
     }
 
-    /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.JmxService#getAttributeValue(java.lang.String, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.hellblazer.glassHouse.rest.service.JmxService#getAttributeValue(java
+     * .lang.String, java.lang.String)
      */
     @Override
     public MBeanAttributeValueJaxBean getAttributeValue(String objectName,
-                                                        String attributeName)
-                                                                             throws MalformedObjectNameException,
-                                                                             NullPointerException {
-        return getAttributeValue(ObjectName.getInstance(objectName),
-                                 attributeName);
+	    String attributeName) throws MalformedObjectNameException,
+	    NullPointerException {
+	return getAttributeValue(ObjectName.getInstance(objectName),
+		attributeName);
     }
 
-    /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.JmxService#getMBeanShortJaxBeans(javax.ws.rs.core.UriInfo)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.hellblazer.glassHouse.rest.service.JmxService#getMBeanShortJaxBeans
+     * (javax.ws.rs.core.UriInfo)
      */
     @Override
     public MBeanShortJaxBeans getMBeanShortJaxBeans(UriInfo uriInfo) {
-        Set<MBeanShortJaxBean> mBeanShortJaxBeans = new TreeSet<MBeanShortJaxBean>();
-        QueryExp query;
-        try {
-            query = Query.not(ObjectName.getInstance(String.format("%s:*",
-                                                                   "JMImplementation")));
-        } catch (MalformedObjectNameException | NullPointerException e) {
-            throw new IllegalStateException(
-                                            "Cannot create query to exclude JMImplementation");
-        }
-        for (ObjectName name : mbs.queryNames(null, query)) {
-            mBeanShortJaxBeans.add(new MBeanShortJaxBean(
-                                                         uriInfo,
-                                                         name.getCanonicalName()));
-        }
-        return new MBeanShortJaxBeans(mBeanShortJaxBeans);
+	Set<MBeanShortJaxBean> mBeanShortJaxBeans = new TreeSet<MBeanShortJaxBean>();
+	QueryExp query;
+	try {
+	    query = Query.and(ObjectName.getInstance("*:*"), Query
+		    .not(ObjectName.getInstance(String.format("%s:*",
+			    "JMImplementation"))));
+	} catch (MalformedObjectNameException | NullPointerException e) {
+	    throw new IllegalStateException(
+		    "Cannot create query to exclude JMImplementation");
+	}
+	for (ObjectName name : mbs.queryNames(null, query)) {
+	    mBeanShortJaxBeans.add(new MBeanShortJaxBean(uriInfo, name
+		    .getCanonicalName()));
+	}
+	return new MBeanShortJaxBeans(mBeanShortJaxBeans);
     }
 
-    /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.JmxService#getOperationsMetaData(javax.ws.rs.core.UriInfo, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.hellblazer.glassHouse.rest.service.JmxService#getOperationsMetaData
+     * (javax.ws.rs.core.UriInfo, java.lang.String)
      */
     @Override
     public MBeanOperationJaxBeans getOperationsMetaData(UriInfo uriInfo,
-                                                        String objectName)
-                                                                          throws InstanceNotFoundException,
-                                                                          IntrospectionException,
-                                                                          MalformedObjectNameException,
-                                                                          ReflectionException,
-                                                                          NullPointerException {
-        Set<MBeanOperationJaxBean> mBeanOperationJaxBeans = new TreeSet<MBeanOperationJaxBean>();
-        for (MBeanOperationInfo info : mbs.getMBeanInfo(ObjectName.getInstance(objectName)).getOperations()) {
-            mBeanOperationJaxBeans.add(new MBeanOperationJaxBean(uriInfo, info));
-        }
+	    String objectName) throws InstanceNotFoundException,
+	    IntrospectionException, MalformedObjectNameException,
+	    ReflectionException, NullPointerException {
+	Set<MBeanOperationJaxBean> mBeanOperationJaxBeans = new TreeSet<MBeanOperationJaxBean>();
+	for (MBeanOperationInfo info : mbs.getMBeanInfo(
+		ObjectName.getInstance(objectName)).getOperations()) {
+	    mBeanOperationJaxBeans
+		    .add(new MBeanOperationJaxBean(uriInfo, info));
+	}
 
-        return new MBeanOperationJaxBeans(objectName, mBeanOperationJaxBeans);
+	return new MBeanOperationJaxBeans(objectName, mBeanOperationJaxBeans);
     }
 
-    /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.JmxService#invokeOperation(java.lang.String, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.hellblazer.glassHouse.rest.service.JmxService#invokeOperation(java
+     * .lang.String, java.lang.String)
      */
     @Override
     public OperationReturnValueJaxBean invokeOperation(String objectName,
-                                                       String operationName)
-                                                                            throws MalformedObjectNameException,
-                                                                            NullPointerException,
-                                                                            InstanceNotFoundException {
-        return invokeOperation(objectName, operationName, new String[] {},
-                               new String[] {});
+	    String operationName) throws MalformedObjectNameException,
+	    NullPointerException, InstanceNotFoundException {
+	return invokeOperation(objectName, operationName, new String[] {},
+		new String[] {});
     }
 
-    /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.JmxService#invokeOperation(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[])
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.hellblazer.glassHouse.rest.service.JmxService#invokeOperation(java
+     * .lang.String, java.lang.String, java.lang.String[], java.lang.String[])
      */
     @Override
     public OperationReturnValueJaxBean invokeOperation(String objectName,
-                                                       String operationName,
-                                                       String[] paramStrings,
-                                                       String[] signature)
-                                                                          throws MalformedObjectNameException,
-                                                                          NullPointerException,
-                                                                          InstanceNotFoundException {
-        assert paramStrings != null;
-        assert signature != null;
-        ObjectName n = ObjectName.getInstance(objectName);
-        Object[] parameters = new Object[paramStrings.length];
-        int i = 0;
-        for (String param : paramStrings) {
-            try {
-                parameters[i] = valueFactory.valueOf(param, signature[i]);
-            } catch (Exception e) {
-                throw new IllegalArgumentException(
-                                                   String.format("Invalid argument type [%s]",
-                                                                 param), e);
-            }
-            i++;
-        }
-        Object returnValue = null;
-        String exception = null;
-        try {
-            returnValue = mbs.invoke(n, operationName, parameters, signature);
-        } catch (ReflectionException | MBeanException e) {
-            exception = e.toString();
-        }
-        return new OperationReturnValueJaxBean(
-                                               n.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME),
-                                               returnValue, exception);
+	    String operationName, String[] paramStrings, String[] signature)
+	    throws MalformedObjectNameException, NullPointerException,
+	    InstanceNotFoundException {
+	assert paramStrings != null;
+	assert signature != null;
+	ObjectName n = ObjectName.getInstance(objectName);
+	Object[] parameters = new Object[paramStrings.length];
+	int i = 0;
+	for (String param : paramStrings) {
+	    try {
+		parameters[i] = valueFactory.valueOf(param, signature[i]);
+	    } catch (Exception e) {
+		throw new IllegalArgumentException(String.format(
+			"Invalid argument type [%s]", param), e);
+	    }
+	    i++;
+	}
+	Object returnValue = null;
+	String exception = null;
+	try {
+	    returnValue = mbs.invoke(n, operationName, parameters, signature);
+	} catch (ReflectionException | MBeanException e) {
+	    exception = e.toString();
+	}
+	return new OperationReturnValueJaxBean(
+		n.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME),
+		returnValue, exception);
     }
 
     /**
@@ -213,22 +230,22 @@ public class JmxServiceImpl implements JmxService {
      * @return
      */
     private MBeanAttributeValueJaxBean getAttributeValue(ObjectName n,
-                                                         String attributeName) {
-        Object value = null;
-        String exception = null;
-        try {
-            value = mbs.getAttribute(n, attributeName);
-        } catch (AttributeNotFoundException | MBeanException
-                | ReflectionException | InstanceNotFoundException e) {
-            exception = e.toString();
-        }
-        String nodeName = n.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME);
-        if (nodeName == null) {
-            nodeName = "";
-        }
-        return new MBeanAttributeValueJaxBean(attributeName, nodeName,
-                                              n.getCanonicalName(), value,
-                                              exception);
+	    String attributeName) {
+	Object value = null;
+	String exception = null;
+	try {
+	    value = mbs.getAttribute(n, attributeName);
+	} catch (AttributeNotFoundException | MBeanException
+		| ReflectionException | InstanceNotFoundException e) {
+	    exception = e.toString();
+	}
+	String nodeName = n
+		.getKeyProperty(CascadingAgent.CASCADED_NODE_PROPERTY_NAME);
+	if (nodeName == null) {
+	    nodeName = "";
+	}
+	return new MBeanAttributeValueJaxBean(attributeName, nodeName,
+		n.getCanonicalName(), value, exception);
     }
 
 }

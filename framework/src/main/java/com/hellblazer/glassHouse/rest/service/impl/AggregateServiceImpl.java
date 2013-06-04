@@ -169,7 +169,7 @@ public class AggregateServiceImpl implements AggregateService {
      * @param nodeName
      */
     public void addNode(String nodeName) {
-        mBeanServerNodes.remove(nodeName);
+        mBeanServerNodes.add(nodeName);
     }
 
     @Override
@@ -380,7 +380,7 @@ public class AggregateServiceImpl implements AggregateService {
      * @param nodeName
      */
     public void removeNode(String nodeName) {
-        mBeanServerNodes.add(nodeName);
+        mBeanServerNodes.remove(nodeName);
     }
 
     private MBeanAttributeValueJaxBean getAttributeValueFor(String attributeName,
