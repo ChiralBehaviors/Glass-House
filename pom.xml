@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.hellblazer</groupId>
 	<artifactId>glass-house.app</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>Glass House Application</name>
 	<description>Glass House umbrella app</description>
 	<packaging>pom</packaging>
@@ -63,7 +63,7 @@
 			<dependency>
 				<groupId>com.hellblazer</groupId>
 				<artifactId>cascading-jmx</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
+				<version>0.0.1</version>
 			</dependency>
 			<dependency>
 				<groupId>com.sun.jersey</groupId>
@@ -73,7 +73,7 @@
 			<dependency>
 				<groupId>com.hellblazer</groupId>
 				<artifactId>service-discovery</artifactId>
-				<version>1.0.1-SNAPSHOT</version>
+				<version>1.0.1</version>
 			</dependency>
 			<dependency>
 				<groupId>com.yammer.dropwizard</groupId>
@@ -88,22 +88,22 @@
 			<dependency>
 				<groupId>com.hellblazer</groupId>
 				<artifactId>nexus</artifactId>
-				<version>1.0.1-SNAPSHOT</version>
+				<version>1.0.1</version>
 			</dependency>
 			<dependency>
 				<groupId>com.hellblazer</groupId>
 				<artifactId>glass-house</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
+				<version>0.0.1</version>
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.dataformat</groupId>
 				<artifactId>jackson-dataformat-yaml</artifactId>
-				<version>2.1.4</version>
+				<version>2.2.2</version>
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
-				<version>2.1.4</version>
+				<version>2.2.2</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
