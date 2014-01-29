@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hellblazer.glassHouserest.service.impl;
+package com.hellblazer.glassHouse.rest.service.impl;
 
 import static com.hellblazer.jmx.cascading.proxy.ProxyCascadingAgent.getTargetName;
 import static junit.framework.Assert.assertEquals;

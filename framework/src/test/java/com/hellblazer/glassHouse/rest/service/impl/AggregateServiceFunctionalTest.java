@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hellblazer.glassHouserest.service.impl;
+package com.hellblazer.glassHouse.rest.service.impl;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Matchers.any;

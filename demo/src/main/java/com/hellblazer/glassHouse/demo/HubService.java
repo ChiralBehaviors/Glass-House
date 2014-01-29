@@ -16,14 +16,8 @@
 
 package com.hellblazer.glassHouse.demo;
 
-import static com.hellblazer.slp.ServiceScope.SERVICE_TYPE;
-
-import java.lang.management.ManagementFactory;
-import java.util.Map;
-
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
-import javax.management.ObjectName;
 
 import com.hellblazer.glassHouse.AuthenticatedUser;
 import com.hellblazer.glassHouse.discovery.Hub;
@@ -43,8 +37,6 @@ import com.hellblazer.glassHouse.rest.service.impl.JmxServiceImpl;
 import com.hellblazer.glassHouse.rest.web.Index;
 import com.hellblazer.glassHouse.rest.web.Nodes;
 import com.hellblazer.gossip.configuration.YamlHelper;
-import com.hellblazer.jmx.cascading.CascadingService;
-import com.hellblazer.nexus.GossipScope;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.auth.basic.BasicAuthProvider;
@@ -55,12 +47,13 @@ import com.yammer.dropwizard.config.Environment;
  * @author hhildebrand
  * 
  */
-public class HubService extends Service<HubConfiguration> {
+public class HubService extends Service<HubServiceConfiguration> {
 
     public static void main(String[] argv) throws Exception {
         new HubService().run(argv);
     }
 
+    @SuppressWarnings("unused")
     private Hub hub;
 
     /*
@@ -71,7 +64,7 @@ public class HubService extends Service<HubConfiguration> {
      * .Bootstrap)
      */
     @Override
-    public void initialize(Bootstrap<HubConfiguration> bootstrap) {
+    public void initialize(Bootstrap<HubServiceConfiguration> bootstrap) {
         bootstrap.getObjectMapperFactory().registerModule(YamlHelper.getModule());
         bootstrap.setName("Glass House");
         bootstrap.addBundle(new AssetsBundle("/assets/", "/"));
@@ -85,25 +78,14 @@ public class HubService extends Service<HubConfiguration> {
      * , com.yammer.dropwizard.config.Environment)
      */
     @Override
-    public void run(HubConfiguration configuration, Environment environment)
-                                                                            throws Exception {
+    public void run(HubServiceConfiguration configuration,
+                    Environment environment) throws Exception {
         environment.addProvider(new BasicAuthProvider<AuthenticatedUser>(
                                                                          new ExampleAuthenticator(),
                                                                          "SUPER SECRET STUFF"));
         MBeanServer mbs = MBeanServerFactory.createMBeanServer(configuration.domainName);
-        GossipScope scope = new GossipScope(configuration.gossip.construct());
-        scope.start();
-        CascadingService cascadingService = new CascadingService(mbs);
-        ManagementFactory.getPlatformMBeanServer().registerMBean(cascadingService,
-                                                                 new ObjectName(
-                                                                                configuration.cascadingServiceName));
         AggregateServiceImpl aggregateService = new AggregateServiceImpl(mbs);
-        hub = new Hub(cascadingService, configuration.sourceMap, scope,
-                      aggregateService);
-        for (Map.Entry<String, String> entry : configuration.services.entrySet()) {
-            hub.listenFor(String.format("(%s=%s)", SERVICE_TYPE, entry.getKey()),
-                          entry.getValue());
-        }
+        hub = configuration.hub.construct(mbs);
         environment.addHealthCheck(new JmxHealthCheck(mbs));
         JmxService jmxService = new JmxServiceImpl(mbs);
 

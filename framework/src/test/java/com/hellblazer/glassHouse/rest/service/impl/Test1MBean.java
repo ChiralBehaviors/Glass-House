@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.hellblazer.glassHouserest.service.impl;
+package com.hellblazer.glassHouse.rest.service.impl;
 
 /**
  * @author hhildebrand
  * 
  */
-public interface Test2MBean {
+public interface Test1MBean {
 
     int getAttribute1();
 
@@ -30,5 +30,7 @@ public interface Test2MBean {
 
     void setAttribute2(int value);
 
-    String operationFoo(String param);
+    String operation1();
+
+    String operation2();
 }

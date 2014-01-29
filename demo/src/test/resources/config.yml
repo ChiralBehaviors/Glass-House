@@ -1,12 +1,13 @@
 http:
   rootPath: /jmx/*
-  
-cascadingServiceName: "hellblazer:type=cnc"
-gossip:
-    endpoint: ${gossip.seed.host}:${gossip.seed.port}
-    
-services:
-    service:control:jmx:rmi: "*:*"
+
+hub:
+    cascadingServiceName: "hellblazer:type=cnc"
+    gossip:
+        endpoint: ${gossip.seed.host}:${gossip.seed.port}
+        
+    services:
+        service:control:jmx:rmi: "*:*"
   
 logging:
   loggers:

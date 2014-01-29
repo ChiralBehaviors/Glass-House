@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.hellblazer</groupId>
 		<artifactId>glass-house.app</artifactId>
-		<version>0.0.1</version>
+		<version>0.0.2-SNAPSHOT</version>
 	</parent>
 	<artifactId>glass-house</artifactId>
 	<name>Glass House Framework</name>
@@ -40,6 +40,11 @@
 		<dependency>
 			<groupId>com.yammer.dropwizard</groupId>
 			<artifactId>dropwizard-auth</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.hellblazer</groupId>
+			<artifactId>nexus</artifactId>
+			<optional>true</optional>
 		</dependency>
 	</dependencies>
 </project>

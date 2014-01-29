@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.hellblazer.glassHouserest.service.impl;
+package com.hellblazer.glassHouse.rest.service.impl;
 
 /**
  * @author hhildebrand
  * 
  */
-public class Test2 implements Test2MBean {
+public class Test1 implements Test1MBean {
 
     private int attribute1 = -1;
     private int attribute2 = -1;
 
     /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.impl.Test2MBean#getAttribute1()
+     * @see com.hellblazer.glassHouse.rest.service.impl.Test1MBean#getAttribute1()
      */
     @Override
     public int getAttribute1() {
@@ -34,7 +34,7 @@ public class Test2 implements Test2MBean {
     }
 
     /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.impl.Test2MBean#setAttribute1(int)
+     * @see com.hellblazer.glassHouse.rest.service.impl.Test1MBean#setAttribute1(int)
      */
     @Override
     public void setAttribute1(int value) {
@@ -43,7 +43,7 @@ public class Test2 implements Test2MBean {
     }
 
     /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.impl.Test2MBean#getAttribute2()
+     * @see com.hellblazer.glassHouse.rest.service.impl.Test1MBean#getAttribute2()
      */
     @Override
     public int getAttribute2() {
@@ -51,7 +51,7 @@ public class Test2 implements Test2MBean {
     }
 
     /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.impl.Test2MBean#setAttribute2(int)
+     * @see com.hellblazer.glassHouse.rest.service.impl.Test1MBean#setAttribute2(int)
      */
     @Override
     public void setAttribute2(int value) {
@@ -59,10 +59,18 @@ public class Test2 implements Test2MBean {
     }
 
     /* (non-Javadoc)
-     * @see com.hellblazer.glassHouse.rest.service.impl.Test2MBean#operationFoo()
+     * @see com.hellblazer.glassHouse.rest.service.impl.Test1MBean#operation1()
      */
     @Override
-    public String operationFoo(String param) {
-        return param;
+    public String operation1() {
+        return Integer.toString(attribute1);
+    }
+
+    /* (non-Javadoc)
+     * @see com.hellblazer.glassHouse.rest.service.impl.Test1MBean#operation2()
+     */
+    @Override
+    public String operation2() {
+        return Integer.toString(attribute2);
     }
 }
