@@ -36,7 +36,7 @@ import com.hellblazer.glassHouse.rest.service.impl.AggregateServiceImpl;
 import com.hellblazer.glassHouse.rest.service.impl.JmxServiceImpl;
 import com.hellblazer.glassHouse.rest.web.Index;
 import com.hellblazer.glassHouse.rest.web.Nodes;
-import com.hellblazer.gossip.configuration.YamlHelper;
+import com.hellblazer.gossip.configuration.GossipModule;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.auth.basic.BasicAuthProvider;
@@ -65,7 +65,7 @@ public class HubService extends Service<HubServiceConfiguration> {
      */
     @Override
     public void initialize(Bootstrap<HubServiceConfiguration> bootstrap) {
-        bootstrap.getObjectMapperFactory().registerModule(YamlHelper.getModule());
+        bootstrap.getObjectMapperFactory().registerModule(new GossipModule());
         bootstrap.setName("Glass House");
         bootstrap.addBundle(new AssetsBundle("/assets/", "/"));
     }

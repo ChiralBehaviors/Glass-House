@@ -33,7 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.hellblazer.glassHouse.rest.service.impl.AggregateServiceImpl;
 import com.hellblazer.gossip.configuration.GossipConfiguration;
-import com.hellblazer.gossip.configuration.YamlHelper;
+import com.hellblazer.gossip.configuration.GossipModule;
 import com.hellblazer.jmx.cascading.CascadingService;
 import com.hellblazer.nexus.GossipScope;
 
@@ -49,7 +49,7 @@ public class HubConfiguration {
                                                              JsonMappingException,
                                                              IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        mapper.registerModule(YamlHelper.getModule());
+        mapper.registerModule(new GossipModule());
         return mapper.readValue(yaml, HubConfiguration.class);
     }
 
