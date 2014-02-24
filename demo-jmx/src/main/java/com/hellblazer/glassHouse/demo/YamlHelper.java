@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.hellblazer.gossip.configuration.GossipModule;
 
 public class YamlHelper {
 
@@ -26,6 +27,6 @@ public class YamlHelper {
     }
 
     public static Module getModule() {
-	return com.hellblazer.gossip.configuration.YamlHelper.getModule();
+	return new GossipModule();
     }
 }
