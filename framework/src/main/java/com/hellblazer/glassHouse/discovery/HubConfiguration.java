@@ -32,10 +32,10 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.hellblazer.glassHouse.rest.service.impl.AggregateServiceImpl;
-import com.hellblazer.gossip.configuration.GossipConfiguration;
-import com.hellblazer.gossip.configuration.GossipModule;
 import com.hellblazer.jmx.cascading.CascadingService;
-import com.hellblazer.nexus.GossipScope;
+import com.hellblazer.nexus.config.GossipScopeModule;
+import com.hellblazer.slp.ServiceScope;
+import com.hellblazer.slp.config.ServiceScopeConfiguration;
 
 /**
  * A configuration POJO using the Nexus gossip discovery service.
@@ -49,24 +49,24 @@ public class HubConfiguration {
                                                              JsonMappingException,
                                                              IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        mapper.registerModule(new GossipModule());
+        mapper.registerModule(new GossipScopeModule());
         return mapper.readValue(yaml, HubConfiguration.class);
     }
 
     /**
-     * The Gossip configuration
+     * The service scope configuration
      */
-    public GossipConfiguration gossip   = new GossipConfiguration();
+    public ServiceScopeConfiguration discovery;
 
     /**
      * The JMX object name to register the hub service
      */
-    public String              hubName;
+    public String                    hubName;
 
     /**
      * The JMX object name to register the cascading service
      */
-    public String              cascadingServiceName;
+    public String                    cascadingServiceName;
 
     /**
      * The map of abstract service names to jmx filter patterns. The keys
@@ -84,14 +84,14 @@ public class HubConfiguration {
      *        only the MBeans in the domain "appServer" will be proxied
      * </pre>
      */
-    public Map<String, String> services = Collections.emptyMap();
+    public Map<String, String>       services = Collections.emptyMap();
 
     /**
      * A Map object that will be passed to the
      * {@link JMXConnectorFactory#connect(JMXServiceURL,Map)} method, in order
      * to connect to the source <tt>MBeanServer</tt>.
      */
-    public Map<String, ?>      sourceMap;
+    public Map<String, ?>            sourceMap;
 
     /**
      * Construct a hub from the receiver configuration, using the supplied
@@ -102,7 +102,7 @@ public class HubConfiguration {
      * @throws Exception
      */
     public Hub construct(MBeanServer mbs) throws Exception {
-        GossipScope scope = new GossipScope(gossip.construct());
+        ServiceScope scope = discovery.construct();
         scope.start();
         CascadingService cascadingService = new CascadingService(mbs);
         mbs.registerMBean(cascadingService,
