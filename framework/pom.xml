@@ -34,10 +34,6 @@
 			<artifactId>jersey-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.hellblazer</groupId>
-			<artifactId>service-discovery</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.yammer.dropwizard</groupId>
 			<artifactId>dropwizard-auth</artifactId>
 		</dependency>
