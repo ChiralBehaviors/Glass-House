@@ -27,13 +27,13 @@ import javax.management.ObjectName;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
+import com.chiralBehaviors.disovery.configuration.DiscoveryModule;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.hellblazer.glassHouse.rest.service.impl.AggregateServiceImpl;
 import com.hellblazer.jmx.cascading.CascadingService;
-import com.hellblazer.nexus.config.GossipScopeModule;
 import com.hellblazer.slp.ServiceScope;
 import com.hellblazer.slp.config.ServiceScopeConfiguration;
 
@@ -49,7 +49,7 @@ public class HubConfiguration {
                                                              JsonMappingException,
                                                              IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        mapper.registerModule(new GossipScopeModule());
+        mapper.registerModule(new DiscoveryModule());
         return mapper.readValue(yaml, HubConfiguration.class);
     }
 

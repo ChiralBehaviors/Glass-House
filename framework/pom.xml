@@ -38,9 +38,8 @@
 			<artifactId>dropwizard-auth</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.hellblazer</groupId>
-			<artifactId>nexus</artifactId>
-			<optional>true</optional>
+			<groupId>com.chiralBehaviors</groupId>
+			<artifactId>discovery-module</artifactId>
 		</dependency>
 	</dependencies>
 </project>

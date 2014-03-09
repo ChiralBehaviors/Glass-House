@@ -66,8 +66,8 @@
 			<artifactId>glass-house</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.hellblazer</groupId>
-			<artifactId>nexus</artifactId>
+			<groupId>com.chiralBehaviors</groupId>
+			<artifactId>discovery-module</artifactId>
 		</dependency>
 	</dependencies>
 </project>

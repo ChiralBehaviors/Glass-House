@@ -11,16 +11,16 @@
 	<description>A process that advertises its JMX connection</description>
 	<dependencies>
 		<dependency>
-			<groupId>com.hellblazer</groupId>
-			<artifactId>nexus</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-yaml</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.chiralBehaviors</groupId>
+			<artifactId>discovery-module</artifactId>
 		</dependency>
 	</dependencies>
 	<build>
