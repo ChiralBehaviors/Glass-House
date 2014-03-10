@@ -3,8 +3,8 @@ http:
 
 hub:
     cascadingServiceName: "hellblazer:type=cnc"
-    gossip:
-        endpoint: ${gossip.seed.host}:${gossip.seed.port}
+    discover:
+        type: multicast
         
     services:
         service:control:jmx:rmi: "*:*"
